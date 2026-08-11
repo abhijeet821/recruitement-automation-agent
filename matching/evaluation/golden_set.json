@@ -1,0 +1,156 @@
+{
+  "name": "backend_engineer_python_v1",
+  "_comment": [
+    "Labelled evaluation set for the scorer comparison. Labels are 0-5 human",
+    "relevance grades (5 = fast-track, 0 = irrelevant), assigned as a recruiter",
+    "hiring a mid/senior Python backend engineer would assign them.",
+    "",
+    "The set is built to expose the failure mode of keyword matching, not just",
+    "to be easy. Three candidates are deliberate traps:",
+    "  c08  senior Java/Spring engineer - hits java, api, sql, docker, aws in the",
+    "       legacy keyword list and so scores high, but is the wrong stack (label 2)",
+    "  c05  Node.js developer - hits node, api, rest, sql, docker (label 3)",
+    "  c10  QA tester - mentions python, sql, api and so scores non-trivially",
+    "       on substring matching despite being unsuitable (label 1)",
+    "Conversely c13 (Python data engineer) and c04 (Python/Flask) are strong,",
+    "transferable candidates whose value a literal Django keyword match misses.",
+    "",
+    "Replace this synthetic set with real, recruiter-labelled applicants as soon",
+    "as a campaign has produced them - synthetic data validates the pipeline, it",
+    "does not validate the weights."
+  ],
+  "job": {
+    "role_title": "Backend Engineer (Python)",
+    "seniority": "mid",
+    "min_years": 3.0,
+    "max_years": 7.0,
+    "must_have_skills": [
+      "Python",
+      "Django",
+      "REST API design",
+      "PostgreSQL",
+      "Docker",
+      "unit testing"
+    ],
+    "nice_to_have_skills": [
+      "AWS",
+      "Celery",
+      "Redis",
+      "Kubernetes",
+      "CI/CD"
+    ],
+    "responsibilities": [
+      "Design and build REST APIs for a high-traffic product",
+      "Own service reliability and performance",
+      "Model and optimise relational data access",
+      "Write and maintain automated tests",
+      "Review code and mentor junior engineers"
+    ],
+    "domain": "Software / SaaS",
+    "education_requirement": "",
+    "location": "Remote",
+    "employment_type": "Full time",
+    "is_technical": true,
+    "raw_jd": "We are hiring a Backend Engineer (Python) with 3-7 years of experience to design and build REST APIs for a high-traffic product. You will own service reliability, model relational data on PostgreSQL, containerise services with Docker, and write automated tests. Required: strong Python, Django, REST API design, PostgreSQL, Docker, unit testing. Nice to have: AWS, Celery, Redis, Kubernetes, CI/CD."
+  },
+  "candidates": [
+    {
+      "id": "c01",
+      "label": 5,
+      "resume_path": "resumes/c01_senior_python.txt",
+      "email": "priya.ramanathan@example.com",
+      "notes": "7y senior Python/Django, payments scale, strong quantified impact."
+    },
+    {
+      "id": "c02",
+      "label": 5,
+      "resume_path": "resumes/c02_python_fastapi.txt",
+      "email": "m.oyelaran@example.com",
+      "notes": "6y Python-first, FastAPI+Django, distributed systems, metrics-driven."
+    },
+    {
+      "id": "c03",
+      "label": 4,
+      "resume_path": "resumes/c03_mid_django.txt",
+      "email": "sofia.martinez@example.com",
+      "notes": "4y solid Django/DRF, right in the experience band, less depth at scale."
+    },
+    {
+      "id": "c13",
+      "label": 4,
+      "resume_path": "resumes/c13_data_engineer.txt",
+      "email": "yuki.tanaka@example.com",
+      "notes": "Python data engineer with real FastAPI service work - strong transferable fit."
+    },
+    {
+      "id": "c04",
+      "label": 4,
+      "resume_path": "resumes/c04_python_flask.txt",
+      "email": "d.okonkwo@example.com",
+      "notes": "5y Python/Flask, strong API design, Django only peripheral."
+    },
+    {
+      "id": "c06",
+      "label": 3,
+      "resume_path": "resumes/c06_junior_django.txt",
+      "email": "aisha.khan@example.com",
+      "notes": "Right stack exactly, but 2y - under the band and shallow."
+    },
+    {
+      "id": "c14",
+      "label": 3,
+      "resume_path": "resumes/c14_devops.txt",
+      "email": "omar.haddad@example.com",
+      "notes": "Heavy Python scripting and platform depth, but not a product backend dev."
+    },
+    {
+      "id": "c05",
+      "label": 3,
+      "resume_path": "resumes/c05_node_backend.txt",
+      "email": "james.whitfield@example.com",
+      "notes": "TRAP: hits many legacy keywords. Real backend skill, wrong language."
+    },
+    {
+      "id": "c08",
+      "label": 2,
+      "resume_path": "resumes/c08_java_senior.txt",
+      "email": "rajesh.iyer@example.com",
+      "notes": "TRAP: senior and keyword-rich (java/api/sql/docker/aws) but no Python."
+    },
+    {
+      "id": "c07",
+      "label": 2,
+      "resume_path": "resumes/c07_fresh_grad.txt",
+      "email": "tom.brennan@example.com",
+      "notes": "Fresh graduate, some Python, far below the experience requirement."
+    },
+    {
+      "id": "c09",
+      "label": 1,
+      "resume_path": "resumes/c09_frontend.txt",
+      "email": "elena.volkova@example.com",
+      "notes": "Competent frontend engineer, no backend ownership."
+    },
+    {
+      "id": "c10",
+      "label": 1,
+      "resume_path": "resumes/c10_qa_tester.txt",
+      "email": "minh.nguyen@example.com",
+      "notes": "TRAP: mentions python, sql, api, selenium - substring-friendly, unsuitable."
+    },
+    {
+      "id": "c11",
+      "label": 0,
+      "resume_path": "resumes/c11_designer.txt",
+      "email": "clara.benoit@example.com",
+      "notes": "Graphic designer - entirely different field."
+    },
+    {
+      "id": "c12",
+      "label": 0,
+      "resume_path": "resumes/c12_sales.txt",
+      "email": "m.thorne@example.com",
+      "notes": "Enterprise sales manager - entirely different field."
+    }
+  ]
+}

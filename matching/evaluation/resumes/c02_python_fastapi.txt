@@ -1,0 +1,25 @@
+MARCUS OYELARAN
+m.oyelaran@example.com | Lagos, Nigeria | github.com/example-marcus
+
+SUMMARY
+Backend engineer, 6 years. Python-first. Distributed systems and API platforms.
+
+EXPERIENCE
+Backend Engineer II — Kestrel Logistics (2020 - Present)
+- Own the routing API: FastAPI + PostgreSQL + PostGIS serving 12k req/min peak.
+- Replaced synchronous dispatch with an event-driven design on Kafka; reduced
+  order assignment time from 11s to 900ms at the 95th percentile.
+- Introduced contract testing across 9 services; production incidents fell 45%
+  year over year.
+- Run the Kubernetes migration for the platform team; wrote the Helm charts.
+
+Software Engineer — Adanna Health (2019 - 2020)
+- Built patient records REST API in Django; HIPAA-aligned audit logging.
+- Automated ETL from 4 hospital systems using Python and Airflow.
+
+SKILLS
+Python, FastAPI, Django, PostgreSQL, Kafka, Kubernetes, Docker, REST, gRPC,
+Redis, Airflow, pytest, GitHub Actions, AWS
+
+EDUCATION
+BSc Computer Science — University of Lagos, 2019

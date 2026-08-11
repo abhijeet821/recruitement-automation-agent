@@ -1,0 +1,23 @@
+OMAR HADDAD
+omar.haddad@example.com | Dubai, UAE | github.com/example-omar
+
+SUMMARY
+DevOps / platform engineer, 4 years. Infrastructure automation, heavy Python scripting.
+
+EXPERIENCE
+DevOps Engineer — Gulf Digital Infrastructure (2021 - Present)
+- Manage Kubernetes clusters running 60 services across 3 AWS regions.
+- Wrote the internal deployment CLI in Python; used by 40 engineers daily.
+- Built Terraform modules covering the whole production estate.
+- Cut mean time to recovery from 55 minutes to 12 by rebuilding observability
+  on Prometheus and Grafana.
+
+Systems Engineer — Emirates Hosting (2020 - 2021)
+- Linux administration, Bash and Python automation, Nginx and PostgreSQL ops.
+
+SKILLS
+Kubernetes, Docker, Terraform, AWS, Python scripting, Bash, Linux, Prometheus,
+Grafana, CI/CD, GitLab CI, Nginx, PostgreSQL administration
+
+EDUCATION
+BSc Computer Engineering — American University of Sharjah, 2020

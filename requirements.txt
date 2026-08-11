@@ -1,0 +1,32 @@
+# ── Web framework ────────────────────────────────────────────
+Django==5.2.8
+django-environ==0.12.0
+django-ratelimit==4.1.0
+dj-database-url==3.0.1
+whitenoise==6.9.0
+gunicorn==23.0.0
+
+# ── Google Workspace integration ─────────────────────────────
+google-api-python-client==2.187.0
+google-auth==2.41.1
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.3
+
+# ── Data / scoring core ──────────────────────────────────────
+numpy==2.4.3
+scipy==1.17.1
+scikit-learn==1.8.0
+
+# ── Parsing & I/O ────────────────────────────────────────────
+pypdf==6.4.0
+requests==2.32.5
+python-dateutil==2.9.0.post0
+
+# ── Crypto (OAuth token encryption at rest) ──────────────────
+cryptography==46.0.4
+
+# NOTE: the Ollama provider talks to the local REST API with `requests`,
+# so no extra SDK is needed. For the hosted Gemini provider:
+#     pip install -r requirements-gemini.txt
+# For Postgres in production:
+#     pip install "psycopg[binary]==3.2.12"

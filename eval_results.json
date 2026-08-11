@@ -1,0 +1,178 @@
+{
+  "dataset": "backend_engineer_python_v1",
+  "n": 14,
+  "results": [
+    {
+      "scorer": "ensemble",
+      "n": 14,
+      "spearman": 0.964,
+      "spearman_p": 0.0,
+      "kendall_tau": 0.897,
+      "ndcg@5": 0.956,
+      "ndcg@10": 0.99,
+      "precision@5": 1.0,
+      "recall@5": 0.625,
+      "precision@10": 0.8,
+      "mae": 10.38,
+      "rmse": 11.08,
+      "seconds": 511.3,
+      "notes": [
+        "Only 14 candidates; treat differences between scorers as indicative."
+      ]
+    },
+    {
+      "scorer": "keyword_jd",
+      "n": 14,
+      "spearman": 0.942,
+      "spearman_p": 0.0,
+      "kendall_tau": 0.888,
+      "ndcg@5": 0.716,
+      "ndcg@10": 0.855,
+      "precision@5": 1.0,
+      "recall@5": 0.625,
+      "precision@10": 0.8,
+      "mae": 10.24,
+      "rmse": 13.36,
+      "seconds": 0.0,
+      "notes": [
+        "Only 14 candidates; treat differences between scorers as indicative."
+      ]
+    },
+    {
+      "scorer": "keyword_legacy",
+      "n": 14,
+      "spearman": 0.822,
+      "spearman_p": 0.0003,
+      "kendall_tau": 0.713,
+      "ndcg@5": 0.701,
+      "ndcg@10": 0.76,
+      "precision@5": 1.0,
+      "recall@5": 0.625,
+      "precision@10": 0.8,
+      "mae": 14.29,
+      "rmse": 17.21,
+      "seconds": 0.0,
+      "notes": [
+        "Only 14 candidates; treat differences between scorers as indicative."
+      ]
+    },
+    {
+      "scorer": "random",
+      "n": 14,
+      "spearman": -0.354,
+      "spearman_p": 0.2141,
+      "kendall_tau": -0.291,
+      "ndcg@5": 0.323,
+      "ndcg@10": 0.401,
+      "precision@5": 0.4,
+      "recall@5": 0.25,
+      "precision@10": 0.4,
+      "mae": 39.7,
+      "rmse": 48.56,
+      "seconds": 0.0,
+      "notes": [
+        "Only 14 candidates; treat differences between scorers as indicative."
+      ]
+    }
+  ],
+  "per_candidate": {
+    "c01": {
+      "label": 5.0,
+      "random": 48.48,
+      "keyword_legacy": 77.78,
+      "keyword_jd": 83.33,
+      "ensemble": 91.24
+    },
+    "c02": {
+      "label": 5.0,
+      "random": 10.95,
+      "keyword_legacy": 77.78,
+      "keyword_jd": 66.67,
+      "ensemble": 90.71
+    },
+    "c03": {
+      "label": 4.0,
+      "random": 26.47,
+      "keyword_legacy": 88.89,
+      "keyword_jd": 66.67,
+      "ensemble": 84.91
+    },
+    "c13": {
+      "label": 4.0,
+      "random": 44.19,
+      "keyword_legacy": 66.67,
+      "keyword_jd": 66.67,
+      "ensemble": 74.95
+    },
+    "c04": {
+      "label": 4.0,
+      "random": 76.5,
+      "keyword_legacy": 77.78,
+      "keyword_jd": 83.33,
+      "ensemble": 88.19
+    },
+    "c06": {
+      "label": 3.0,
+      "random": 46.12,
+      "keyword_legacy": 66.67,
+      "keyword_jd": 66.67,
+      "ensemble": 76.86
+    },
+    "c14": {
+      "label": 3.0,
+      "random": 16.85,
+      "keyword_legacy": 44.44,
+      "keyword_jd": 50.0,
+      "ensemble": 70.41
+    },
+    "c05": {
+      "label": 3.0,
+      "random": 12.03,
+      "keyword_legacy": 88.89,
+      "keyword_jd": 50.0,
+      "ensemble": 74.53
+    },
+    "c08": {
+      "label": 2.0,
+      "random": 54.06,
+      "keyword_legacy": 66.67,
+      "keyword_jd": 33.33,
+      "ensemble": 53.15
+    },
+    "c07": {
+      "label": 2.0,
+      "random": 32.11,
+      "keyword_legacy": 66.67,
+      "keyword_jd": 33.33,
+      "ensemble": 27.5
+    },
+    "c09": {
+      "label": 1.0,
+      "random": 40.77,
+      "keyword_legacy": 33.33,
+      "keyword_jd": 0.0,
+      "ensemble": 16.97
+    },
+    "c10": {
+      "label": 1.0,
+      "random": 37.15,
+      "keyword_legacy": 33.33,
+      "keyword_jd": 16.67,
+      "ensemble": 33.47
+    },
+    "c11": {
+      "label": 0.0,
+      "random": 94.73,
+      "keyword_legacy": 0.0,
+      "keyword_jd": 0.0,
+      "ensemble": 12.4
+    },
+    "c12": {
+      "label": 0.0,
+      "random": 62.84,
+      "keyword_legacy": 0.0,
+      "keyword_jd": 0.0,
+      "ensemble": 12.75
+    }
+  }
+}

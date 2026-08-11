@@ -1,0 +1,219 @@
+{% extends 'hiring_app/base.html' %}
+{% load static %}
+
+{% block title %}HireAI — Automate Your Entire Hiring Pipeline with AI{% endblock %}
+{% block meta_desc %}HireAI uses Google Gemini to generate job descriptions, score resumes, schedule interviews, and send offers — all automated.{% endblock %}
+
+{% block content %}
+
+<!-- ═══════════════════════════════════════════════════════════
+     HERO
+═══════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-eyebrow">
+    <span class="dot"></span>
+    Powered by Google Gemini AI
+  </div>
+
+  <h1 class="hero-title">
+    Hire <span class="gradient-text" id="typing-text">Smarter</span><br>
+    with AI Automation
+  </h1>
+
+  <p class="hero-subtitle">
+    From job description to offer letter — HireAI automates your entire recruitment
+    pipeline using Google Workspace, Gemini AI, and LinkedIn.
+  </p>
+
+  <div class="hero-actions">
+    <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+      🚀 Start for Free
+    </a>
+    <a href="#how-it-works" class="btn btn-outline btn-lg">
+      See How It Works
+    </a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-value" data-counter="5">0</div>
+      <div class="hero-stat-label">Steps Automated</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value" data-counter="6">0</div>
+      <div class="hero-stat-label">Google APIs</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">∞</div>
+      <div class="hero-stat-label">Candidates Handled</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">10×</div>
+      <div class="hero-stat-label">Faster Hiring</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     HOW IT WORKS
+═══════════════════════════════════════════════════════════ -->
+<section class="section" id="how-it-works" style="background: rgba(255,255,255,0.015); border-top: 1px solid rgba(255,255,255,0.06); border-bottom: 1px solid rgba(255,255,255,0.06);">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Workflow</div>
+      <h2 class="section-title">A 5-Step Automated Pipeline</h2>
+      <p class="section-subtitle">Replace hours of manual work with one intelligent agent that handles everything from start to finish.</p>
+    </div>
+
+    <div class="steps-flow">
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.4);">✍️</div>
+        <div class="flow-step-title">Smart JD Draft</div>
+        <div class="flow-step-desc">Gemini AI generates a professional job description from your role title and experience requirements</div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(6,182,212,0.15); border-color: rgba(6,182,212,0.4);">🚀</div>
+        <div class="flow-step-title">Launch Campaign</div>
+        <div class="flow-step-desc">Auto-creates Google Form, Sheet, and optionally posts to LinkedIn with one click</div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4);">🧠</div>
+        <div class="flow-step-title">AI Scoring</div>
+        <div class="flow-step-desc">Syncs applicants, downloads resumes from Drive, and scores each candidate with AI</div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4);">📅</div>
+        <div class="flow-step-title">Auto Schedule</div>
+        <div class="flow-step-desc">Sends personalized Google Calendar interview invites via Gmail to selected candidates</div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-icon" style="background: rgba(236,72,153,0.15); border-color: rgba(236,72,153,0.4);">⚖️</div>
+        <div class="flow-step-title">Hire or Reject</div>
+        <div class="flow-step-desc">Bulk send offers or rejection emails and log all decisions in your Google Sheet</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     FEATURES
+═══════════════════════════════════════════════════════════ -->
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Features</div>
+      <h2 class="section-title">Everything You Need to Hire</h2>
+      <p class="section-subtitle">A complete AI-powered toolkit for modern recruiters built on the Google Workspace ecosystem.</p>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(124,58,237,0.15);">🤖</div>
+        <div class="feature-title">Gemini AI JDs</div>
+        <div class="feature-desc">Generate structured, professional job descriptions in seconds using Google Gemini 1.5 Flash.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(6,182,212,0.15);">📊</div>
+        <div class="feature-title">Google Sheets Tracking</div>
+        <div class="feature-desc">Every applicant, score, and decision is automatically logged to a dedicated Google Sheet.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(245,158,11,0.15);">📝</div>
+        <div class="feature-title">Auto Google Forms</div>
+        <div class="feature-desc">Instantly creates an application form with resume upload — ready to share with candidates.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(16,185,129,0.15);">🔍</div>
+        <div class="feature-title">Resume AI Scoring</div>
+        <div class="feature-desc">Downloads PDF resumes from Drive, parses text, and scores each candidate against the role.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(236,72,153,0.15);">📧</div>
+        <div class="feature-title">Gmail Automation</div>
+        <div class="feature-desc">Sends calendar invites, offer letters, and rejection emails automatically via Gmail API.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(99,102,241,0.15);">💼</div>
+        <div class="feature-title">LinkedIn Integration</div>
+        <div class="feature-desc">Optionally post your job opening directly to LinkedIn with the application form link.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     TECH STACK
+═══════════════════════════════════════════════════════════ -->
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-tag">Tech Stack</div>
+      <h2 class="section-title">Built on Industry Standards</h2>
+    </div>
+    <div class="tech-stack">
+      <div class="tech-badge">🤖 Google Gemini AI</div>
+      <div class="tech-badge">🐍 Django (Python)</div>
+      <div class="tech-badge">📊 Google Sheets API</div>
+      <div class="tech-badge">📝 Google Forms API</div>
+      <div class="tech-badge">📧 Gmail API</div>
+      <div class="tech-badge">📅 Google Calendar API</div>
+      <div class="tech-badge">💾 Google Drive API</div>
+      <div class="tech-badge">💼 LinkedIn API</div>
+      <div class="tech-badge">🔐 OAuth 2.0</div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     CTA
+═══════════════════════════════════════════════════════════ -->
+<section class="section" style="padding-top: 0;">
+  <div class="container">
+    <div class="card" style="
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(6,182,212,0.08));
+      border-color: rgba(124,58,237,0.25);
+      position: relative;
+      overflow: hidden;
+    ">
+      <div style="position: relative; z-index: 1;">
+        <h2 class="section-title" style="margin-bottom: 1rem;">Ready to Transform Your Hiring?</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem; max-width: 440px; margin-left: auto; margin-right: auto;">
+          Create your account and start your first AI-powered recruitment campaign in minutes.
+        </p>
+        <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
+          🚀 Get Started Free
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+═══════════════════════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="container">
+    <p class="footer-text">
+      Built with ❤️ using Django + Google Gemini AI &nbsp;·&nbsp;
+      <a href="https://github.com/mohitgupta4873/Recruitment_Automation_AI_Agent" target="_blank">GitHub</a>
+    </p>
+  </div>
+</footer>
+
+{% endblock %}

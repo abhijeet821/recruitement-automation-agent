@@ -1,0 +1,22 @@
+ELENA VOLKOVA
+elena.volkova@example.com | Berlin, Germany | github.com/example-elena
+
+SUMMARY
+Frontend engineer, 4 years. React, TypeScript, design systems.
+
+EXPERIENCE
+Frontend Engineer — Lumen Interfaces (2021 - Present)
+- Build and maintain the component library used across 6 product teams.
+- Migrated the dashboard from Vue to React; cut bundle size 40%.
+- Improved Lighthouse performance score from 62 to 94.
+- Consume REST APIs; collaborate with backend on contract design.
+
+Junior Frontend Developer — Studio Kranz (2020 - 2021)
+- Built responsive marketing sites in React and Next.js.
+
+SKILLS
+React, TypeScript, JavaScript, Next.js, CSS, Tailwind, Redux, Jest,
+Storybook, Figma, REST consumption, Webpack
+
+EDUCATION
+BA Media Informatics — Technische Universitat Berlin, 2020

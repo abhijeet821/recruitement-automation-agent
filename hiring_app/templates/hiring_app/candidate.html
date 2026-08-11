@@ -1,0 +1,239 @@
+{% extends 'hiring_app/base.html' %}
+
+{% block title %}{{ candidate.full_name|default:candidate.email }} — HireAI{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="container" style="max-width:900px;">
+
+    <div class="page-header">
+      <a href="{% url 'campaign_detail' campaign.pk %}" style="font-size:0.8rem; color:var(--text-muted);">
+        ← {{ campaign.role_title }}
+      </a>
+      <h1 class="page-title" style="margin-top:0.4rem;">{{ candidate.full_name|default:candidate.email }}</h1>
+      <p class="page-subtitle">
+        {{ candidate.email }}
+        {% if profile.location %} · {{ profile.location }}{% endif %}
+        {% if candidate.submitted_at %} · applied {{ candidate.submitted_at|date:"j M Y" }}{% endif %}
+      </p>
+    </div>
+
+    <!-- Score summary -->
+    <div class="card mb-3">
+      <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div>
+          <div style="font-size:2.4rem; font-weight:800; line-height:1;">
+            {{ candidate.score_percent }}<span style="font-size:1rem; color:var(--text-muted);">/100</span>
+          </div>
+          <span class="badge {% if candidate.overall_score >= 75 %}badge-green{% elif candidate.overall_score >= 60 %}badge-cyan{% elif candidate.overall_score >= 45 %}badge-amber{% else %}badge-gray{% endif %}">
+            {{ score.recommendation_enum.label }}
+          </span>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.78rem; color:var(--text-muted);">Confidence</div>
+          <div style="font-size:1.3rem; font-weight:700; {% if candidate.needs_review %}color:#f59e0b;{% endif %}">
+            {{ candidate.confidence_percent }}%
+          </div>
+          {% if candidate.needs_review %}
+          <div style="font-size:0.7rem; color:#f59e0b; max-width:200px;">
+            Thin evidence — this reflects what we could read, not the candidate's ability
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if score.summary %}
+      <p style="font-size:0.9rem; line-height:1.6; color:var(--text-secondary);">{{ score.summary }}</p>
+      {% endif %}
+
+      {% if score.flags %}
+      <div class="alert alert-warning" style="margin-top:0.8rem;">
+        <ul style="margin:0; padding-left:1.1rem; font-size:0.82rem;">
+          {% for flag in score.flags %}<li>{{ flag }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Score breakdown -->
+    <div class="card mb-3">
+      <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:0.9rem;">How this score was reached</h3>
+      {% for d in score.dimensions %}
+      <div style="margin-bottom:1rem;">
+        <div class="flex items-center justify-between" style="margin-bottom:0.3rem;">
+          <span style="font-size:0.86rem; font-weight:600;">{{ d.name }}</span>
+          <span style="font-size:0.78rem; color:var(--text-muted);">
+            {{ d.score|floatformat:2 }} × weight {{ d.weight|floatformat:2 }}
+          </span>
+        </div>
+        <div style="height:7px; background:var(--bg-card-hover); border-radius:4px; overflow:hidden;">
+          <div style="height:100%; width:{% widthratio d.score 1 100 %}%;
+                      background:{% if d.score >= 0.75 %}#10b981{% elif d.score >= 0.5 %}#06b6d4{% elif d.score >= 0.3 %}#f59e0b{% else %}#64748b{% endif %};"></div>
+        </div>
+        {% if d.rationale %}
+        <div style="font-size:0.76rem; color:var(--text-muted); margin-top:0.3rem;">{{ d.rationale }}</div>
+        {% endif %}
+        {% if d.evidence %}
+        <ul style="margin:0.35rem 0 0; padding-left:1.1rem; font-size:0.74rem; color:var(--text-muted);">
+          {% for e in d.evidence %}<li>{{ e }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p style="color:var(--text-muted); font-size:0.85rem;">
+        No score breakdown available — this candidate has not been scored yet.
+      </p>
+      {% endfor %}
+
+      <p style="font-size:0.72rem; color:var(--text-muted); margin-top:0.8rem; border-top:1px solid var(--border); padding-top:0.6rem;">
+        Scorer <code>{{ score.scorer }}</code> v{{ score.scorer_version }}.
+        Dimensions with no available evidence are dropped and their weight is
+        shared across the rest, rather than being scored as zero.
+      </p>
+    </div>
+
+    <!-- Strengths & gaps -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;" class="mb-3">
+      <div class="card">
+        <h3 style="font-size:0.88rem; font-weight:700; margin-bottom:0.6rem; color:#10b981;">Strengths</h3>
+        {% if score.strengths %}
+        <ul style="margin:0; padding-left:1.1rem; font-size:0.82rem; line-height:1.6;">
+          {% for s in score.strengths %}<li>{{ s }}</li>{% endfor %}
+        </ul>
+        {% else %}<p style="font-size:0.82rem; color:var(--text-muted);">None identified.</p>{% endif %}
+      </div>
+      <div class="card">
+        <h3 style="font-size:0.88rem; font-weight:700; margin-bottom:0.6rem; color:#f59e0b;">Gaps</h3>
+        {% if score.gaps %}
+        <ul style="margin:0; padding-left:1.1rem; font-size:0.82rem; line-height:1.6;">
+          {% for g in score.gaps %}<li>{{ g }}</li>{% endfor %}
+        </ul>
+        {% else %}<p style="font-size:0.82rem; color:var(--text-muted);">None identified.</p>{% endif %}
+      </div>
+    </div>
+
+    <!-- GitHub -->
+    {% if github and github.found %}
+    <div class="card mb-3">
+      <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:0.7rem;">
+        Public code — {{ github.username }}
+      </h3>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:0.8rem; margin-bottom:0.9rem;">
+        <div><div style="font-size:1.3rem; font-weight:700;">{{ github.original_repos }}</div>
+             <div style="font-size:0.72rem; color:var(--text-muted);">original repos</div></div>
+        <div><div style="font-size:1.3rem; font-weight:700;">{{ github.total_stars }}</div>
+             <div style="font-size:0.72rem; color:var(--text-muted);">stars</div></div>
+        <div><div style="font-size:1.3rem; font-weight:700;">{{ github.followers }}</div>
+             <div style="font-size:0.72rem; color:var(--text-muted);">followers</div></div>
+        <div><div style="font-size:1.3rem; font-weight:700;">{{ github.days_since_last_push|default:"—" }}</div>
+             <div style="font-size:0.72rem; color:var(--text-muted);">days since push</div></div>
+      </div>
+      {% if github.top_repos %}
+      <div style="font-size:0.8rem;">
+        {% for r in github.top_repos|slice:":5" %}
+        <div style="padding:0.4rem 0; border-top:1px solid var(--border);">
+          <strong>{{ r.name }}</strong>
+          <span style="color:var(--text-muted);">
+            {% if r.language %}· {{ r.language }}{% endif %} · {{ r.stars }}★
+          </span>
+          {% if r.description %}
+          <div style="font-size:0.75rem; color:var(--text-muted);">{{ r.description|truncatechars:120 }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% elif candidate.github_username %}
+    <div class="card mb-3">
+      <p style="font-size:0.84rem; color:var(--text-muted); margin:0;">
+        GitHub profile <code>{{ candidate.github_username }}</code> could not be read.
+        This does not count against the candidate.
+      </p>
+    </div>
+    {% endif %}
+
+    <!-- Parsed resume -->
+    <div class="card mb-3">
+      <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:0.7rem;">What we read from the resume</h3>
+      <div style="font-size:0.82rem; margin-bottom:0.8rem;">
+        <strong>{{ profile.inferred_years_experience|floatformat:0 }} years</strong> of experience ·
+        <strong>{{ profile.skills|length }}</strong> skills ·
+        <strong>{{ profile.experience|length }}</strong> roles
+      </div>
+
+      {% if profile.experience %}
+      <div style="margin-bottom:0.9rem;">
+        {% for e in profile.experience %}
+        <div style="padding:0.45rem 0; border-top:1px solid var(--border); font-size:0.82rem;">
+          <strong>{{ e.title }}</strong> — {{ e.company }}
+          <span style="color:var(--text-muted); font-size:0.75rem;">
+            {% if e.start_year %}{{ e.start_year }}–{% if e.is_current %}present{% else %}{{ e.end_year|default:"?" }}{% endif %}{% endif %}
+          </span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if profile.skills %}
+      <div class="flex gap-2 flex-wrap">
+        {% for s in profile.skills %}
+        <span class="badge {% if s.evidence == 'professional' %}badge-green{% elif s.evidence == 'project' %}badge-cyan{% else %}badge-gray{% endif %}"
+              title="{{ s.evidence }}{% if s.years %} · {{ s.years }} years{% endif %}">
+          {{ s.name }}{% if s.years %} · {{ s.years|floatformat:0 }}y{% endif %}
+        </span>
+        {% endfor %}
+      </div>
+      <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.6rem;">
+        Green = used professionally · Blue = project work · Grey = listed only
+      </p>
+      {% endif %}
+
+      {% if candidate.warnings %}
+      <div class="alert alert-warning" style="margin-top:0.8rem;">
+        <ul style="margin:0; padding-left:1.1rem; font-size:0.78rem;">
+          {% for w in candidate.warnings %}<li>{{ w }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+
+      {% if candidate.resume_drive_link %}
+      <a href="{{ candidate.resume_drive_link }}" target="_blank" rel="noopener"
+         class="btn btn-sm btn-outline" style="margin-top:0.8rem;">Open original resume</a>
+      {% endif %}
+    </div>
+
+    <!-- Recruiter rating -->
+    <div class="card" style="border-left:3px solid #7c3aed;">
+      <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:0.4rem;">Your rating</h3>
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.8rem;">
+        Rate this candidate 0–5 as you would in a normal review. These ratings are
+        the ground truth the scorer is measured against — run
+        <code>manage.py evaluate_scorer --campaign {{ campaign.pk }}</code> once
+        you have enough of them.
+      </p>
+      <form method="post" action="{% url 'rate_candidate' campaign.pk candidate.pk %}">
+        {% csrf_token %}
+        <div class="flex gap-2 items-center mb-3 flex-wrap">
+          {% for value in "012345" %}
+          <label style="display:flex; align-items:center; gap:0.3rem; font-size:0.85rem;">
+            <input type="radio" name="rating" value="{{ value }}"
+                   {% if candidate.recruiter_rating|stringformat:"s" == value %}checked{% endif %}>
+            {{ value }}
+          </label>
+          {% endfor %}
+          <span style="font-size:0.72rem; color:var(--text-muted); margin-left:0.5rem;">
+            5 = fast-track · 3 = worth a conversation · 0 = irrelevant
+          </span>
+        </div>
+        <div class="form-group">
+          <textarea name="note" class="form-control" rows="2"
+                    placeholder="Why? (optional — useful when reviewing disagreements with the scorer)">{{ candidate.recruiter_note }}</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">Save rating</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

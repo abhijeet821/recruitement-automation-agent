@@ -1,0 +1,22 @@
+JAMES WHITFIELD
+james.whitfield@example.com | Toronto, Canada | github.com/example-james
+
+SUMMARY
+Backend engineer, 3 years, Node.js and TypeScript. Some Python scripting.
+
+EXPERIENCE
+Backend Developer — Northbound Commerce (2022 - Present)
+- Build REST and GraphQL APIs in Node.js/Express for an e-commerce platform.
+- Designed the inventory sync service; handles 90k SKU updates nightly.
+- Containerised services with Docker; deployed to AWS ECS.
+- Wrote Python scripts for data migration and one-off reporting tasks.
+
+Junior Developer — Maple Digital (2021 - 2022)
+- Node.js REST endpoints, MongoDB and PostgreSQL data access.
+
+SKILLS
+Node.js, TypeScript, JavaScript, Express, GraphQL, REST, PostgreSQL, MongoDB,
+Docker, AWS, Git, basic Python
+
+EDUCATION
+BSc Computer Science — University of Toronto, 2021

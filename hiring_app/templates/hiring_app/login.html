@@ -1,0 +1,93 @@
+{% extends 'hiring_app/base.html' %}
+{% load static %}
+
+{% block title %}Sign In — HireAI{% endblock %}
+{% block meta_desc %}Sign in to your HireAI account to manage your AI-powered recruitment campaigns.{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+
+    <!-- Logo -->
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🤖</div>
+      <span class="auth-logo-text">HireAI</span>
+    </div>
+
+    <h1 class="auth-heading">Welcome back</h1>
+    <p class="auth-subheading">Sign in to your recruitment dashboard</p>
+
+    <!-- Error -->
+    {% if error %}
+    <div class="auth-error">
+      ⚠️ {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- Form -->
+    <form method="post" action="{% url 'login' %}" id="login-form">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="login-username">Username</label>
+        <div class="input-wrapper">
+          <span class="input-icon">👤</span>
+          <input
+            type="text"
+            id="login-username"
+            name="username"
+            class="form-control"
+            placeholder="your username"
+            required
+            autocomplete="username"
+          >
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <div class="input-wrapper">
+          <span class="input-icon">🔑</span>
+          <input
+            type="password"
+            id="login-password"
+            name="password"
+            class="form-control"
+            placeholder="••••••••"
+            required
+            autocomplete="current-password"
+          >
+          <button type="button" class="input-toggle" data-target="login-password">👁️</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full mt-2" id="signin-btn">
+        Sign In →
+      </button>
+    </form>
+
+    <div class="auth-divider">or</div>
+
+    <div class="auth-footer">
+      Don't have an account?
+      <a href="{% url 'register' %}">Create one</a>
+    </div>
+
+    <div class="auth-footer" style="margin-top: 0.5rem;">
+      <a href="{% url 'landing' %}" style="color: var(--text-muted); font-size: 0.78rem;">← Back to home</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Add loading state on submit
+  document.getElementById('login-form').addEventListener('submit', function() {
+    const btn = document.getElementById('signin-btn');
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+  });
+</script>
+{% endblock %}

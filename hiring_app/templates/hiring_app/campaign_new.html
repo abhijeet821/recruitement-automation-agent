@@ -1,0 +1,63 @@
+{% extends 'hiring_app/base.html' %}
+
+{% block title %}New campaign — HireAI{% endblock %}
+{% block nav_new %}active{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="container" style="max-width:720px;">
+
+    <div class="page-header">
+      <h1 class="page-title">New campaign</h1>
+      <p class="page-subtitle">
+        Describe the role. The next step drafts a job description and grades it
+        before anything is published.
+      </p>
+    </div>
+
+    <div class="card">
+      <form method="post" action="{% url 'campaign_new' %}">
+        {% csrf_token %}
+
+        <div class="form-group">
+          <label class="form-label" for="role_title">Role title</label>
+          <input type="text" id="role_title" name="role_title" class="form-control"
+                 placeholder="e.g. Backend Engineer (Python)" required autofocus>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label class="form-label" for="experience">Experience required</label>
+            <input type="text" id="experience" name="experience" class="form-control"
+                   placeholder="e.g. 3-6 years">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="work_model">Work model</label>
+            <input type="text" id="work_model" name="work_model" class="form-control"
+                   placeholder="Remote / Hybrid / On-site">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+          <div class="form-group">
+            <label class="form-label" for="location">Location</label>
+            <input type="text" id="location" name="location" class="form-control"
+                   placeholder="e.g. Bengaluru">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="salary_range">Compensation range</label>
+            <input type="text" id="salary_range" name="salary_range" class="form-control"
+                   placeholder="e.g. ₹18-28 LPA">
+            <small style="color:var(--text-muted); font-size:0.73rem;">
+              Postings that state a range attract more and better-matched applicants.
+            </small>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full">Continue</button>
+      </form>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

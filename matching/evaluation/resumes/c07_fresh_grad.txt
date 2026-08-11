@@ -1,0 +1,22 @@
+TOM BRENNAN
+tom.brennan@example.com | Dublin, Ireland
+
+SUMMARY
+Recent computer science graduate seeking a backend role. Coursework and
+internship experience with Python.
+
+EXPERIENCE
+Software Engineering Intern — Cloudkeep (Summer 2024)
+- Wrote Python scripts to parse log files and generate weekly reports.
+- Fixed small bugs in an internal Django admin tool.
+
+ACADEMIC PROJECTS
+- Final year project: a Flask web app for campus event booking, SQLite backend.
+- Built a REST API for a course project using Python and Flask.
+- Data structures coursework in Java.
+
+SKILLS
+Python, Flask, SQL, Java, Git, HTML/CSS, basic Linux
+
+EDUCATION
+BSc Computer Science — Trinity College Dublin, 2024

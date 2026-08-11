@@ -1,0 +1,24 @@
+DAVID OKONKWO
+d.okonkwo@example.com | Manchester, UK | github.com/example-david
+
+SUMMARY
+Python backend engineer, 5 years. API design and data-heavy services.
+
+EXPERIENCE
+Senior Software Engineer — Northgate Analytics (2020 - Present)
+- Built and own 3 Flask microservices exposing analytics REST APIs to 200 clients.
+- Reduced report generation from 45 minutes to 6 by rewriting aggregation in
+  SQL with materialised views on PostgreSQL.
+- Introduced Docker-based CI; cut build times 3x.
+- Designed the API versioning strategy still used across the platform.
+
+Software Engineer — Vale Insurance (2019 - 2020)
+- Python services for claims processing; integrated 5 third-party REST APIs.
+- Migrated batch jobs from cron to Celery.
+
+SKILLS
+Python, Flask, SQLAlchemy, PostgreSQL, Celery, Docker, REST API design,
+pytest, Linux, AWS EC2/S3, some Django exposure on internal tooling
+
+EDUCATION
+MSc Software Engineering — University of Manchester, 2019

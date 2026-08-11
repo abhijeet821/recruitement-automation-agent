@@ -1,0 +1,23 @@
+YUKI TANAKA
+yuki.tanaka@example.com | Osaka, Japan | github.com/example-yuki
+
+SUMMARY
+Data engineer, 5 years. Python pipelines, warehousing, and internal data APIs.
+
+EXPERIENCE
+Data Engineer — Sakura Retail Group (2020 - Present)
+- Own 40+ Airflow DAGs in Python moving 2TB/day into Snowflake.
+- Built an internal REST API in FastAPI serving feature data to 5 ML services;
+  p99 under 80ms.
+- Rewrote the nightly aggregation in Spark; runtime fell from 5 hours to 40 min.
+- Containerised all pipeline jobs with Docker; deployed on AWS EKS.
+
+Junior Data Engineer — Kansai Analytics (2019 - 2020)
+- Python ETL scripts, PostgreSQL modelling, dbt transformations.
+
+SKILLS
+Python, Airflow, Spark, SQL, PostgreSQL, Snowflake, FastAPI, dbt, Docker,
+AWS (S3, EKS, Glue), pandas, REST API design
+
+EDUCATION
+MSc Information Science — Osaka University, 2019

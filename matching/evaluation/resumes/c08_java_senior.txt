@@ -1,0 +1,23 @@
+RAJESH IYER
+rajesh.iyer@example.com | Pune, India | github.com/example-rajesh
+
+SUMMARY
+Senior software engineer, 8 years building enterprise backend systems in Java.
+
+EXPERIENCE
+Technical Lead — Meridian Banking Systems (2020 - Present)
+- Lead a team of 7 building core banking REST APIs in Java and Spring Boot.
+- Designed the transaction processing engine; 2M transactions/day on Oracle SQL.
+- Migrated 14 services to Docker and Kubernetes on AWS.
+- Reduced batch settlement window from 6 hours to 90 minutes.
+
+Senior Software Engineer — Infotech Global (2017 - 2020)
+- Java/Spring microservices, Hibernate, REST API design.
+- Built the Kafka-based event pipeline for audit logging.
+
+SKILLS
+Java, Spring Boot, Hibernate, Oracle SQL, REST API design, Kafka, Docker,
+Kubernetes, AWS, Jenkins, Maven, JUnit
+
+EDUCATION
+B.E. Computer Engineering — University of Pune, 2016

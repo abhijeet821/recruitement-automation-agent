@@ -1,0 +1,23 @@
+SOFIA MARTINEZ
+sofia.martinez@example.com | Madrid, Spain
+
+SUMMARY
+Django developer with 4 years building web backends for SaaS products.
+
+EXPERIENCE
+Backend Developer — Tellus SaaS (2021 - Present)
+- Maintain and extend a Django monolith serving 40k business users.
+- Built the multi-tenant billing module and its REST API endpoints.
+- Added Redis caching to the reporting views, reducing page load from 4s to 1.2s.
+- Set up Docker Compose for local development across the team.
+
+Junior Developer — Bitmarch Studio (2020 - 2021)
+- Built internal CRUD tools with Django and PostgreSQL.
+- Wrote unit tests, raising coverage from 20% to 65%.
+
+SKILLS
+Python, Django, Django REST Framework, PostgreSQL, Redis, Docker, HTML/CSS,
+JavaScript, Git, some AWS (EC2, S3)
+
+EDUCATION
+Licenciatura en Ingenieria Informatica — Universidad Politecnica, 2020

@@ -1,0 +1,62 @@
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ── Virtual environments ─────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Django ───────────────────────────────────────────────────
+db.sqlite3
+db.sqlite3-journal
+/staticfiles/
+/logs/
+*.log
+local_settings.py
+
+# ── Secrets (critical) ───────────────────────────────────────
+.env
+.env.*
+!.env.example
+client_secrets.json
+token.json
+credentials.json
+*.pem
+*.key
+
+# ── Candidate data (PII — never commit) ──────────────────────
+/media/
+*.pdf
+groups.csv
+
+# ── Engine cache ─────────────────────────────────────────────
+.cache/
+
+# NOTE: eval_results.json is deliberately NOT ignored. It is the raw output
+# behind the metrics quoted in the README, so committing it makes those claims
+# independently checkable rather than something you have to take on trust.
+
+# ── Legacy layout, superseded by database models ─────────────
+/campaigns/
+campaign_state.json
+cv_manifest.json
+shortlist.json
+
+# ── Editors & OS ─────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# NOTE: the previous version of this file had lost its leading '#' characters,
+# so header lines such as "--- Secrets ---" were parsed as ignore patterns and
+# "pycache/" never matched "__pycache__/". A blanket "*.json" rule also excluded
+# the evaluation golden set, which must be tracked.

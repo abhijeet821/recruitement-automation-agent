@@ -1,0 +1,16 @@
+line-length = 100
+target-version = "py311"
+
+[lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = [
+    "E501",  # long lines are handled by the formatter, not enforced here
+    "E741",  # ambiguous names are not an issue in this codebase
+    "B008",  # Django idioms rely on calls in argument defaults
+]
+
+[lint.per-file-ignores]
+# Fixtures deliberately build large literal objects.
+"tests/*" = ["E402"]
+# Settings must read env vars before configuring the engine.
+"my_hiring_project/settings.py" = ["E402"]

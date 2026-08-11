@@ -1,0 +1,381 @@
+{% extends 'hiring_app/base.html' %}
+
+{% block title %}{{ campaign.role_title }} — HireAI{% endblock %}
+
+{% block content %}
+<div class="main-content">
+  <div class="container" style="max-width:1000px;">
+
+    <!-- Header -->
+    <div class="page-header flex items-center justify-between">
+      <div>
+        <h1 class="page-title">{{ campaign.role_title }}</h1>
+        <p class="page-subtitle">
+          <span class="badge badge-gray">{{ campaign.get_status_display }}</span>
+          {% if campaign.experience_required %} · {{ campaign.experience_required }}{% endif %}
+          {% if campaign.last_synced_at %} · last synced {{ campaign.last_synced_at|timesince }} ago{% endif %}
+        </p>
+      </div>
+      <div class="flex gap-2 items-center">
+        {% if campaign.form_url %}
+          <a href="{{ campaign.form_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline">Form</a>
+          <a href="{{ campaign.sheet_url }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline">Sheet</a>
+        {% endif %}
+        <form method="post" action="{% url 'campaign_delete' campaign.pk %}" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-sm btn-ghost"
+                  data-confirm="Delete this campaign and all candidate data, including stored resumes? This cannot be undone.">
+            Delete
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {% if not engine.healthy %}
+    <div class="alert alert-warning mb-3">
+      <strong>Scoring engine unavailable</strong> ({{ engine.detail }}). Run
+      <code>python manage.py doctor</code>.
+    </div>
+    {% endif %}
+
+    <!-- Running job -->
+    {% if active_job %}
+    <div class="card mb-3" id="job-panel" style="border-left:3px solid #06b6d4;">
+      <div class="flex items-center justify-between">
+        <div>
+          <strong id="job-message">{{ active_job.message|default:"Starting…" }}</strong>
+          <div style="font-size:0.78rem; color:var(--text-muted);">
+            <span id="job-counts">{{ active_job.processed }}/{{ active_job.total }}</span> processed
+          </div>
+        </div>
+        <span class="badge badge-cyan" id="job-percent">{{ active_job.percent }}%</span>
+      </div>
+      <div style="height:6px; background:var(--bg-card-hover); border-radius:3px; margin-top:0.7rem; overflow:hidden;">
+        <div id="job-bar" style="height:100%; width:{{ active_job.percent }}%; background:#06b6d4; transition:width .4s;"></div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ STEP 1: Job description ═══ -->
+    <div class="card mb-3" style="border-left:3px solid #7c3aed;">
+      <div class="step-header">
+        <div class="step-number purple">1</div>
+        <div>
+          <div class="step-title">Job description</div>
+          <div class="step-desc">
+            Drafted with the sections and keywords recruiters expect, then graded
+            for completeness and inclusive language.
+          </div>
+        </div>
+      </div>
+
+      {% if not campaign.form_id %}
+      <form method="post" action="{% url 'generate_jd' campaign.pk %}" class="mb-3">
+        {% csrf_token %}
+        <input type="hidden" name="role_title" value="{{ campaign.role_title }}">
+        <input type="hidden" name="location" value="{{ campaign.location }}">
+        <input type="hidden" name="work_model" value="{{ campaign.work_model }}">
+        <input type="hidden" name="salary_range" value="{{ campaign.salary_range }}">
+        <div style="display:grid; grid-template-columns:1fr 1fr 150px; gap:0.75rem; align-items:end;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Required skills (comma separated)</label>
+            <input type="text" name="must_have" class="form-control"
+                   placeholder="Python, Django, PostgreSQL, Docker">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Nice to have</label>
+            <input type="text" name="nice_to_have" class="form-control" placeholder="AWS, Kubernetes">
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Experience</label>
+            <input type="text" name="experience" class="form-control"
+                   value="{{ campaign.experience_required }}" placeholder="3-6 years">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">
+          {% if campaign.jd_text %}Redraft{% else %}Draft job description{% endif %}
+        </button>
+      </form>
+      {% endif %}
+
+      {% if jd_quality %}
+      <div class="card mb-3" style="background:rgba(99,102,241,0.06); border-color:rgba(99,102,241,0.2);">
+        <div class="flex items-center justify-between mb-2">
+          <strong style="font-size:0.9rem;">Job description quality</strong>
+          <span class="badge {% if jd_quality.score >= 80 %}badge-green{% elif jd_quality.score >= 60 %}badge-amber{% else %}badge-gray{% endif %}">
+            {{ jd_quality.score }}/100
+          </span>
+        </div>
+        <div style="font-size:0.78rem; color:var(--text-muted); margin-bottom:0.5rem;">
+          {{ jd_quality.word_count }} words ·
+          {{ jd_quality.sections_present|length }}/8 sections ·
+          wording is {{ jd_quality.gender_balance }}
+        </div>
+        {% if jd_quality.suggestions %}
+        <ul style="margin:0; padding-left:1.1rem; font-size:0.8rem; color:var(--text-secondary);">
+          {% for s in jd_quality.suggestions %}<li style="margin-bottom:0.25rem;">{{ s }}</li>{% endfor %}
+        </ul>
+        {% else %}
+        <div style="font-size:0.8rem; color:#10b981;">No issues found.</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      {% if campaign.jd_text %}
+      <form method="post" action="{% url 'save_jd' campaign.pk %}">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Review and edit</label>
+          <textarea name="jd_text" class="form-control" rows="14"
+                    style="font-family:inherit; font-size:0.86rem; line-height:1.65;"
+                    {% if campaign.form_id %}readonly{% endif %}>{{ campaign.jd_text }}</textarea>
+        </div>
+        {% if not campaign.form_id %}
+        <button type="submit" class="btn btn-outline btn-sm">Save &amp; re-grade</button>
+        {% endif %}
+      </form>
+      {% endif %}
+    </div>
+
+    <!-- ═══ STEP 2: Launch ═══ -->
+    {% if campaign.jd_text and not campaign.form_id %}
+    <div class="card mb-3" style="border-left:3px solid #10b981;">
+      <div class="step-header">
+        <div class="step-number green">2</div>
+        <div>
+          <div class="step-title">Launch</div>
+          <div class="step-desc">Creates a Google Form and tracking Sheet, and optionally posts to LinkedIn.</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'launch_campaign' campaign.pk %}">
+        {% csrf_token %}
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+          <div class="form-group">
+            <label class="form-label">LinkedIn access token <span class="badge badge-gray">optional</span></label>
+            <input type="password" name="linkedin_token" class="form-control" autocomplete="off">
+          </div>
+          <div class="form-group">
+            <label class="form-label">LinkedIn author URN</label>
+            <input type="text" name="linkedin_urn" class="form-control" placeholder="urn:li:person:…">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success btn-full"
+                {% if not has_google %}disabled title="Connect Google first"{% endif %}>
+          Launch campaign
+        </button>
+        {% if not has_google %}
+        <p style="font-size:0.78rem; color:var(--text-muted); margin-top:0.5rem;">
+          <a href="{% url 'google_connect' %}">Connect your Google account</a> to launch.
+        </p>
+        {% endif %}
+      </form>
+    </div>
+    {% endif %}
+
+    <!-- ═══ STEP 3: Screen ═══ -->
+    {% if campaign.form_id %}
+    <div class="card mb-3" style="border-left:3px solid #06b6d4;">
+      <div class="step-header">
+        <div class="step-number cyan">3</div>
+        <div>
+          <div class="step-title">Screen applicants</div>
+          <div class="step-desc">
+            Pulls responses, reads each resume, checks GitHub where offered, and
+            scores against this role's requirements.
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-3 flex-wrap">
+        <div style="flex:1; font-size:0.85rem;">
+          <strong>{{ candidates|length }}</strong> screened
+          {% if strong_count %} · <strong style="color:#10b981;">{{ strong_count }}</strong> strong{% endif %}
+          {% if review_count %} · <strong style="color:#f59e0b;">{{ review_count }}</strong> need review{% endif %}
+        </div>
+        <form method="post" action="{% url 'sync_campaign' campaign.pk %}" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-amber" {% if active_job %}disabled{% endif %}>Sync new applicants</button>
+        </form>
+        {% if candidates %}
+        <form method="post" action="{% url 'rescore_campaign' campaign.pk %}" style="margin:0;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline btn-sm" {% if active_job %}disabled{% endif %}
+                  data-confirm="Re-score every candidate with the current job description and weights?">
+            Re-score all
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══ STEP 4: Candidates ═══ -->
+    {% if candidates %}
+    <div class="card mb-3" style="border-left:3px solid #f59e0b;">
+      <div class="step-header">
+        <div class="step-number amber">4</div>
+        <div>
+          <div class="step-title">Shortlist &amp; schedule</div>
+          <div class="step-desc">Select candidates and send calendar invitations. Slots are spaced 45 minutes apart.</div>
+        </div>
+      </div>
+
+      <form method="post" action="{% url 'send_invites' campaign.pk %}">
+        {% csrf_token %}
+        <div class="flex items-center gap-3 mb-3 flex-wrap">
+          <div class="flex items-center gap-2" style="flex:1; min-width:260px;">
+            <span style="font-size:0.82rem; color:var(--text-muted);">First slot</span>
+            <input type="datetime-local" name="interview_date" class="form-control" required style="max-width:250px;">
+          </div>
+          <button type="submit" class="btn btn-danger">Send invitations</button>
+        </div>
+
+        <div style="border:1px solid var(--border); border-radius:var(--radius-md); overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="checkbox-col"><input type="checkbox" id="selectAll" class="fancy-check" title="Select all"></th>
+                <th>Candidate</th>
+                <th>Score</th>
+                <th>Confidence</th>
+                <th>Top gap</th>
+                <th>Status</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in candidates %}
+              <tr>
+                <td class="checkbox-col">
+                  <input type="checkbox" name="candidate_ids" value="{{ c.pk }}" class="fancy-check candidate-checkbox">
+                </td>
+                <td>
+                  <div style="font-weight:500; color:var(--text-primary);">{{ c.full_name|default:c.email }}</div>
+                  <div style="font-size:0.72rem; color:var(--text-muted);">
+                    {{ c.email }}{% if c.github_username %} · {{ c.github_username }}{% endif %}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge {% if c.overall_score >= 75 %}badge-green{% elif c.overall_score >= 60 %}badge-cyan{% elif c.overall_score >= 45 %}badge-amber{% else %}badge-gray{% endif %}">
+                    {{ c.score_percent }}/100
+                  </span>
+                </td>
+                <td>
+                  {% if c.needs_review %}
+                    <span class="badge badge-amber" title="Thin evidence — review manually">{{ c.confidence_percent }}%</span>
+                  {% else %}
+                    <span style="font-size:0.78rem; color:var(--text-muted);">{{ c.confidence_percent }}%</span>
+                  {% endif %}
+                </td>
+                <td style="max-width:240px;">
+                  <span style="font-size:0.74rem; color:var(--text-muted);">
+                    {% with gaps=c.get_score.gaps %}{% if gaps %}{{ gaps.0|truncatechars:60 }}{% else %}—{% endif %}{% endwith %}
+                  </span>
+                </td>
+                <td><span class="badge badge-gray">{{ c.get_status_display }}</span></td>
+                <td>
+                  <a href="{% url 'candidate_detail' campaign.pk c.pk %}" class="btn btn-ghost btn-sm">Details</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </form>
+    </div>
+
+    <!-- ═══ STEP 5: Decisions ═══ -->
+    <div class="card mb-3" style="border-left:3px solid #10b981;">
+      <div class="step-header">
+        <div class="step-number green">5</div>
+        <div>
+          <div class="step-title">Decisions</div>
+          <div class="step-desc">Only the candidates you tick below are contacted.</div>
+        </div>
+      </div>
+
+      <div class="alert alert-warning mb-3">
+        Emails are sent immediately and cannot be recalled. Tick
+        <strong>Notify</strong> for everyone who should hear from you, and
+        <strong>Offer</strong> for those advancing — the rest receive a rejection.
+      </div>
+
+      <form method="post" action="{% url 'send_outcomes' campaign.pk %}">
+        {% csrf_token %}
+        <div style="border:1px solid var(--border); border-radius:var(--radius-md); overflow-x:auto; margin-bottom:1rem;">
+          <table class="data-table">
+            <thead>
+              <tr><th>Notify</th><th>Offer</th><th>Candidate</th><th>Score</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {% for c in candidates %}
+              <tr>
+                <td class="checkbox-col"><input type="checkbox" name="decision_scope" value="{{ c.pk }}" class="fancy-check"></td>
+                <td class="checkbox-col"><input type="checkbox" name="hired_ids" value="{{ c.pk }}" class="fancy-check"></td>
+                <td>{{ c.full_name|default:c.email }}</td>
+                <td>{{ c.score_percent }}</td>
+                <td><span class="badge badge-gray">{{ c.get_status_display }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full"
+                data-confirm="Send decision emails to every candidate ticked under 'Notify'? This cannot be undone.">
+          Send decisions
+        </button>
+      </form>
+    </div>
+    {% endif %}
+
+    {% if other_campaigns %}
+    <div style="margin-top:2rem;">
+      <h3 style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--text-muted); margin-bottom:0.6rem;">
+        Other campaigns
+      </h3>
+      <div class="flex gap-2 flex-wrap">
+        {% for c in other_campaigns %}
+        <a href="{% url 'campaign_detail' c.pk %}" class="btn btn-sm btn-outline">{{ c.role_title }}</a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if active_job %}
+<script>
+  // Poll the background job and reload once it finishes, so the candidate
+  // table reflects the new results without the user having to guess when.
+  (function () {
+    const url = "{% url 'job_status' campaign.pk %}";
+    const bar = document.getElementById('job-bar');
+    const percent = document.getElementById('job-percent');
+    const message = document.getElementById('job-message');
+    const counts = document.getElementById('job-counts');
+
+    const poll = setInterval(async () => {
+      try {
+        const response = await fetch(url, { headers: { 'X-Requested-With': 'fetch' } });
+        if (!response.ok) return;
+        const data = await response.json();
+
+        if (bar) bar.style.width = data.percent + '%';
+        if (percent) percent.textContent = data.percent + '%';
+        if (message && data.message) message.textContent = data.message;
+        if (counts) counts.textContent = data.processed + '/' + data.total;
+
+        if (data.finished) {
+          clearInterval(poll);
+          window.location.reload();
+        }
+      } catch (err) {
+        // Transient network failure: keep polling rather than giving up.
+      }
+    }, 2500);
+  })();
+</script>
+{% endif %}
+{% endblock %}

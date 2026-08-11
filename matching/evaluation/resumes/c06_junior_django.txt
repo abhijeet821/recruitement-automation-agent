@@ -1,0 +1,24 @@
+AISHA KHAN
+aisha.khan@example.com | Karachi, Pakistan | github.com/example-aisha
+
+SUMMARY
+Junior backend developer, 2 years with Django. Keen to grow into API architecture.
+
+EXPERIENCE
+Junior Backend Developer — Softsphere Solutions (2023 - Present)
+- Build CRUD REST APIs in Django REST Framework for a school management product.
+- Write PostgreSQL queries and Django ORM models under senior supervision.
+- Fixed 60+ bugs; added tests for the attendance module.
+
+Intern — Softsphere Solutions (2022 - 2023)
+- Built internal admin pages with Django templates.
+
+PROJECTS
+- Expense tracker: Django + PostgreSQL + Docker, deployed on a VPS.
+- Blog API: Django REST Framework with JWT auth.
+
+SKILLS
+Python, Django, Django REST Framework, PostgreSQL, REST, Git, basic Docker, HTML/CSS
+
+EDUCATION
+BS Computer Science — NED University, 2022

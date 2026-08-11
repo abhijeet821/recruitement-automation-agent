@@ -1,0 +1,5 @@
+# Optional: hosted Gemini provider (LLM_PROVIDER=gemini).
+# The default Ollama provider needs none of this.
+-r requirements.txt
+
+google-genai==1.51.0

@@ -1,0 +1,22 @@
+NGUYEN VAN MINH
+minh.nguyen@example.com | Ho Chi Minh City, Vietnam
+
+SUMMARY
+QA engineer with 3 years of manual and light automation testing experience.
+
+EXPERIENCE
+QA Engineer — Saigon Software House (2022 - Present)
+- Write and execute manual test cases for web and mobile applications.
+- Log and track defects in Jira; verify fixes across 3 release trains.
+- Run SQL queries against the test database to validate data correctness.
+- Started writing Selenium scripts in Python for regression tests.
+
+QA Trainee — Saigon Software House (2021 - 2022)
+- Manual regression testing, test documentation.
+
+SKILLS
+Manual testing, test case design, Jira, SQL, Selenium, basic Python,
+Postman for API testing, Agile/Scrum
+
+EDUCATION
+BSc Information Technology — HCMC University of Technology, 2021

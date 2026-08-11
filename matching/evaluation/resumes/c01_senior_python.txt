@@ -1,0 +1,29 @@
+PRIYA RAMANATHAN
+priya.ramanathan@example.com | +91 98450 11223 | Bengaluru, India
+github.com/example-priya | linkedin.com/in/example-priya
+
+SUMMARY
+Backend engineer with 7 years building high-throughput Python services. Owned
+payments and ledger systems handling 4M requests/day.
+
+EXPERIENCE
+Senior Backend Engineer — Razorline Payments (2021 - Present)
+- Led migration of the monolithic Django billing service to 6 domain services,
+  cutting p99 checkout latency from 840ms to 190ms.
+- Designed idempotent ledger writes on PostgreSQL with advisory locks; zero
+  double-charge incidents across 18 months and 2.1M transactions.
+- Built async settlement pipeline with Celery and Redis, processing 400k jobs/day.
+- Containerised all services with Docker; deployed on AWS ECS with Terraform.
+- Mentored 4 engineers; introduced the team's code review and on-call rotation.
+
+Backend Engineer — Finwave Technologies (2018 - 2021)
+- Built REST APIs in Django REST Framework for a lending product with 300k users.
+- Cut database load 60% by introducing query-level caching and fixing N+1 access.
+- Wrote the reconciliation service in Python that closed a 0.3% ledger drift.
+
+SKILLS
+Python, Django, Django REST Framework, PostgreSQL, Celery, Redis, Docker,
+AWS (ECS, S3, RDS, Lambda), Terraform, REST API design, pytest, CI/CD, Kafka
+
+EDUCATION
+B.Tech, Computer Science — National Institute of Technology, 2018
