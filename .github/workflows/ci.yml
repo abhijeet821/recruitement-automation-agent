@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  # A new push supersedes an in-flight run on the same branch.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    env:
+      # The suite runs entirely against the deterministic fake provider, so CI
+      # needs no Ollama, no GPU, no API key and no network. That was a design
+      # goal of the provider abstraction, not a happy accident.
+      LLM_PROVIDER: fake
+      DEBUG: "True"
+      SECRET_KEY: ci-only-not-a-real-secret
+      MATCHING_CACHE: "False"
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Lower bound is what runtime.txt targets for deployment; upper bound is
+        # what the project is developed on. Both must stay green.
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Check for missing migrations
+        # Catches a model change committed without its migration, which would
+        # otherwise fail at deploy time rather than here.
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Django system checks
+        run: python manage.py check
+
+      - name: Tests
+        run: pytest -q
+
+      - name: Production settings sanity check
+        # DEBUG=False is the configuration that actually ships. It must boot,
+        # and it must refuse to start without a SECRET_KEY.
+        env:
+          DEBUG: "False"
+          SECRET_KEY: ci-only-not-a-real-secret
+          ALLOWED_HOSTS: example.com
+        run: |
+          python manage.py check --deploy --fail-level ERROR
+          if DEBUG=False SECRET_KEY= python manage.py check 2>/dev/null; then
+            echo "::error::App booted with DEBUG=False and no SECRET_KEY"
+            exit 1
+          fi
+          echo "Correctly refuses to start without SECRET_KEY."

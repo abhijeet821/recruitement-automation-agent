@@ -1,5 +1,7 @@
 # HireAI — Explainable Candidate Screening
 
+[![CI](https://github.com/abhijeet821/recruitement-automation-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/abhijeet821/recruitement-automation-agent/actions/workflows/ci.yml)
+
 An end-to-end recruitment system that drafts a job description, publishes an
 application form, and **ranks applicants against that specific role** with a
 score you can take apart and defend.
@@ -72,6 +74,56 @@ comparison can be re-run on real labels at a usable sample size — see
 [Closing the loop](#closing-the-loop).
 
 ---
+
+## Validating the configuration
+
+Two questions the weights leave open, both now measured rather than asserted.
+
+### Does each dimension earn its weight?
+
+`manage.py ablate_scorer` removes each dimension, redistributes its weight, and
+re-measures rank agreement. It reuses the persisted scores, so it is arithmetic
+over results already computed — instant, rather than the hours a naive re-score
+per dimension would take.
+
+```
+dimension dropped     weight   spearman   Δ         verdict
+(none — full model)   —        0.964      —         baseline
+Recruiter rubric      0.19     0.951      -0.013    marginal
+Preferred skills      0.05     0.953      -0.011    marginal
+Required skills       0.31     0.964      +0.000    no measurable effect
+Role alignment        0.13     0.964      +0.000    no measurable effect
+Experience level      0.15     0.973      +0.009    no measurable effect
+```
+
+**Required skills carries 31% of the weight and removing it moves the ranking by
+0.000.** The tempting conclusion — that most of the model is dead weight — is
+wrong, and the report says so. Five of seven dimensions are removable because
+they are *correlated*: a candidate strong on required skills is also strong on
+role alignment and skill quality, so the ordering is over-determined and any one
+signal is redundant **given the others**.
+
+Ablation cannot discriminate under those conditions. It needs candidates who are
+strong on some dimensions and weak on others, and a 14-row set with cleanly
+separated labels does not contain them. The honest output of this experiment is
+a better experiment, not a re-tuned model.
+
+### Is the LLM judge stable enough to weight?
+
+The rubric is the only component that can answer the same question differently
+twice, and it carries 0.17 of the score. `manage.py rubric_consistency` runs it
+repeatedly on one resume:
+
+| Temperature | Overall stdev | Range | Worst-case score swing |
+|---|---|---|---|
+| 0.1 (production) | 0.000 | 0.000 | **0.0 / 100** |
+| 0.8 (8× higher) | 0.009 | 0.020 | **0.3 / 100** |
+
+Under schema-constrained decoding at low temperature the judge is effectively
+deterministic, and even at 0.8 the variance moves the final score by a third of
+a point. The 0.17 weight is defensible. "Evidence of impact" is the least
+reproducible dimension (stdev 0.045) — the one requiring the most judgement,
+which is the sensible place for disagreement to show up.
 
 ## The finding that shaped the architecture
 
@@ -320,9 +372,11 @@ synthetic in the UI so they cannot be mistaken for real recruiter judgements.
 | `manage.py seed_demo` | Load the labelled set as a scored campaign — the whole screening UI, with no Google setup |
 | `manage.py evaluate_scorer` | Benchmark against all baselines, with bootstrap CIs and a paired significance test |
 | `manage.py evaluate_scorer --campaign N` | Benchmark against real recruiter ratings |
+| `manage.py ablate_scorer --campaign N` | Measure what each scoring dimension contributes |
+| `manage.py rubric_consistency --candidate N` | Measure run-to-run variance of the LLM judge |
 | `manage.py calibrate_similarity` | Re-measure embedding separation |
 | `manage.py audit_fairness --campaign N` | Adverse-impact report |
-| `pytest` | 229 tests, no model server required |
+| `pytest` | 245 tests, no model server required |
 
 ---
 

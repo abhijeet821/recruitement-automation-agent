@@ -86,26 +86,57 @@ class TestClientConstruction:
 
 
 class TestSenderAddress:
-    def test_returns_the_authenticated_address(self):
+    """Regression cover for a bug only live Google exposed.
+
+    ``sender_address`` originally called ``gmail.users().getProfile()``. That
+    endpoint requires a Gmail *read* scope; this app holds only ``gmail.send``,
+    so against real Google it returned `403 insufficient authentication scopes`
+    and broke every interview invite. Mocks could not catch it — a MagicMock
+    knows nothing about scope rules. The address now comes from Drive, under a
+    scope already granted.
+    """
+
+    @staticmethod
+    def _drive_returns(client, address):
+        client.drive.about.return_value.get.return_value.execute.return_value = (
+            {"user": {"emailAddress": address}} if address else {}
+        )
+
+    def test_address_comes_from_drive_not_gmail(self):
         client = bare_client()
+        self._drive_returns(client, "recruiter@example.com")
+
+        assert client.sender_address() == "recruiter@example.com"
+        # Gmail must not be consulted: we lack the scope for it.
+        client.gmail.users.return_value.getProfile.assert_not_called()
+
+    def test_falls_back_to_gmail_when_drive_is_unavailable(self):
+        client = bare_client()
+        client.drive.about.return_value.get.return_value.execute.side_effect = http_error(403)
         client.gmail.users.return_value.getProfile.return_value.execute.return_value = {
             "emailAddress": "recruiter@example.com"
         }
         assert client.sender_address() == "recruiter@example.com"
 
-    def test_missing_address_raises_rather_than_returning_a_placeholder(self):
-        """The old code fell back to 'recruiter@example.com', so invites went out
-        with a fabricated organiser address."""
+    def test_both_failing_raises_with_context(self):
         client = bare_client()
-        client.gmail.users.return_value.getProfile.return_value.execute.return_value = {}
-        with pytest.raises(WorkspaceError, match="did not return an email"):
-            client.sender_address()
-
-    def test_api_failure_is_wrapped(self):
-        client = bare_client()
+        client.drive.about.return_value.get.return_value.execute.side_effect = http_error(403)
         client.gmail.users.return_value.getProfile.return_value.execute.side_effect = \
             http_error(403)
-        with pytest.raises(WorkspaceError, match="403"):
+
+        with pytest.raises(WorkspaceError) as exc:
+            client.sender_address()
+        assert "Could not determine which account" in str(exc.value)
+        assert "Drive" in str(exc.value) and "Gmail" in str(exc.value)
+
+    def test_no_placeholder_address_is_ever_invented(self):
+        """The original code fell back to a hardcoded 'recruiter@example.com',
+        so invites went out with a fabricated organiser."""
+        client = bare_client()
+        self._drive_returns(client, None)
+        client.gmail.users.return_value.getProfile.return_value.execute.return_value = {}
+
+        with pytest.raises(WorkspaceError):
             client.sender_address()
 
 

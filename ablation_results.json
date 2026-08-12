@@ -1,0 +1,82 @@
+{
+  "n": 14,
+  "baseline_spearman": 0.9645,
+  "baseline_ndcg@5": 0.956,
+  "rows": [
+    {
+      "dropped": "Recruiter rubric",
+      "spearman": 0.9511,
+      "ndcg@5": 0.956,
+      "delta_spearman": -0.0134,
+      "delta_ndcg@5": 0.0,
+      "mean_weight": 0.1868,
+      "present_for": 14,
+      "verdict": "marginal"
+    },
+    {
+      "dropped": "Preferred skills",
+      "spearman": 0.9533,
+      "ndcg@5": 0.9262,
+      "delta_spearman": -0.0111,
+      "delta_ndcg@5": -0.0298,
+      "mean_weight": 0.0549,
+      "present_for": 14,
+      "verdict": "marginal"
+    },
+    {
+      "dropped": "Required skills",
+      "spearman": 0.9645,
+      "ndcg@5": 0.956,
+      "delta_spearman": 0.0,
+      "delta_ndcg@5": 0.0,
+      "mean_weight": 0.3077,
+      "present_for": 14,
+      "verdict": "no measurable effect"
+    },
+    {
+      "dropped": "Role alignment",
+      "spearman": 0.9645,
+      "ndcg@5": 0.956,
+      "delta_spearman": 0.0,
+      "delta_ndcg@5": 0.0,
+      "mean_weight": 0.1319,
+      "present_for": 14,
+      "verdict": "no measurable effect"
+    },
+    {
+      "dropped": "Skill quality",
+      "spearman": 0.9645,
+      "ndcg@5": 0.956,
+      "delta_spearman": 0.0,
+      "delta_ndcg@5": 0.0,
+      "mean_weight": 0.1209,
+      "present_for": 14,
+      "verdict": "no measurable effect"
+    },
+    {
+      "dropped": "Education",
+      "spearman": 0.9645,
+      "ndcg@5": 0.956,
+      "delta_spearman": 0.0,
+      "delta_ndcg@5": 0.0,
+      "mean_weight": 0.044,
+      "present_for": 14,
+      "verdict": "no measurable effect"
+    },
+    {
+      "dropped": "Experience level",
+      "spearman": 0.9734,
+      "ndcg@5": 0.956,
+      "delta_spearman": 0.0089,
+      "delta_ndcg@5": 0.0,
+      "mean_weight": 0.1538,
+      "present_for": 14,
+      "verdict": "no measurable effect"
+    }
+  ],
+  "notes": [
+    "n=14. These deltas carry wide uncertainty; treat them as directional, not as grounds for retuning weights.",
+    "No measurable effect on this set \u2014 either genuinely redundant, or the set is too small to show it: Required skills, Role alignment, Skill quality, Education, Experience level.",
+    "5 of 7 dimensions can be removed with no effect on the ranking. That points to correlated dimensions and an over-determined ordering on this set, not to dead weight. Ablation cannot separate them here \u2014 it needs candidates that are strong on some dimensions and weak on others, which a 14-row synthetic set with cleanly separated labels does not provide."
+  ]
+}

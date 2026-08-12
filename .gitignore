@@ -27,10 +27,18 @@ local_settings.py
 .env.*
 !.env.example
 client_secrets.json
+# Google downloads OAuth clients as
+# "client_secret_<id>.apps.googleusercontent.com.json", which does NOT match the
+# line above. Without these patterns a downloaded client secret lands in the repo
+# root looking innocuous and gets committed.
+client_secret*
+*.apps.googleusercontent.com.json
 token.json
 credentials.json
+service-account*.json
 *.pem
 *.key
+*.p12
 
 # ── Candidate data (PII — never commit) ──────────────────────
 /media/

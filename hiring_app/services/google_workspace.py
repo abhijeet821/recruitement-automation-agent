@@ -109,14 +109,41 @@ class WorkspaceClient:
     # ── identity ─────────────────────────────────────────────
 
     def sender_address(self) -> str:
+        """The authenticated account's email address, for the invite organiser.
+
+        Read from **Drive**, not Gmail. The obvious call is
+        ``gmail.users().getProfile()``, but that requires a Gmail *read* scope —
+        this app only holds ``gmail.send``, so it returns 403 "insufficient
+        authentication scopes". Widening to ``gmail.readonly`` just to learn our
+        own address would grant inbox access the app has no business having.
+
+        ``drive.about().get(fields="user")`` returns the same address under a
+        scope already held, so it costs nothing extra. Gmail remains a fallback
+        for the case where a future deployment grants read scopes but not Drive.
+        """
+        errors: list[str] = []
+
+        try:
+            about = self.drive.about().get(fields="user(emailAddress)").execute()
+            address = (about.get("user") or {}).get("emailAddress")
+            if address:
+                return address
+            errors.append("Drive returned no email address")
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"Drive: {exc}")
+
         try:
             profile = self.gmail.users().getProfile(userId="me").execute()
+            address = profile.get("emailAddress")
+            if address:
+                return address
+            errors.append("Gmail returned no email address")
         except Exception as exc:  # noqa: BLE001
-            raise _wrap("reading your Gmail profile", exc) from exc
-        address = profile.get("emailAddress")
-        if not address:
-            raise WorkspaceError("Google did not return an email address for this account.")
-        return address
+            errors.append(f"Gmail: {exc}")
+
+        raise WorkspaceError(
+            "Could not determine which account is connected. " + "; ".join(errors)
+        )
 
     # ── campaign provisioning ────────────────────────────────
 

@@ -214,6 +214,8 @@ def assess(
     job: JobSpec,
     provider: LLMProvider,
     github: GitHubProfile | None = None,
+    *,
+    temperature: float = 0.1,
 ) -> RubricResult:
     """Run the rubric. Never raises — failure returns a result with ``error`` set."""
     text = (resume.raw_text or resume.summary or "").strip()
@@ -233,7 +235,7 @@ def assess(
 
     try:
         payload = provider.generate_json(
-            prompt, schema=RUBRIC_SCHEMA, system=SYSTEM_PROMPT, temperature=0.1
+            prompt, schema=RUBRIC_SCHEMA, system=SYSTEM_PROMPT, temperature=temperature
         )
     except LLMError as exc:
         logger.error("Rubric assessment failed: %s", exc)
