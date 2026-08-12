@@ -28,6 +28,7 @@ from django.db import models
 from django.utils import timezone
 
 from hiring_app.crypto import decrypt, encrypt
+from matching.generation.interview import InterviewGuide
 from matching.schemas import CandidateScore, GitHubProfile, JobSpec, ResumeProfile
 
 
@@ -164,6 +165,14 @@ class Candidate(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
     interview_at = models.DateTimeField(null=True, blank=True)
 
+    # InterviewGuide.to_dict() — questions grounded in this candidate's own
+    # evidence, sized to the slot the company books. Cached because generating
+    # it is a model call, and an interviewer will reopen the page several times.
+    interview_guide = models.JSONField(default=dict, blank=True)
+    interview_duration = models.IntegerField(
+        null=True, blank=True, help_text="Minutes booked for the interview slot"
+    )
+
     # Closes the evaluation loop: a recruiter's own 0-5 rating is the label the
     # scorer is measured against. Exported by `manage.py export_labels` into an
     # evaluation set, which is how the weights get validated on real data
@@ -208,6 +217,13 @@ class Candidate(models.Model):
 
     def get_score(self) -> CandidateScore:
         return CandidateScore.from_dict(self.score_detail)
+
+    def get_interview_guide(self) -> InterviewGuide | None:
+        return InterviewGuide.from_dict(self.interview_guide) if self.interview_guide else None
+
+    @property
+    def has_interview_guide(self) -> bool:
+        return bool(self.interview_guide.get("questions") if self.interview_guide else False)
 
     def apply_score(self, score: CandidateScore) -> None:
         """Persist a score into both the JSON blob and the indexed columns."""

@@ -24,6 +24,7 @@ from pathlib import Path
 
 from matching.config import MatchingConfig, get_config
 from matching.enrichment.github import analyse_github
+from matching.generation.interview import InterviewGuide, generate_interview_guide
 from matching.generation.jd import JDQualityReport, analyse_jd, generate_jd
 from matching.llm import LLMProvider, get_provider
 from matching.parsing.jobspec import parse_jobspec
@@ -87,6 +88,27 @@ class ScreeningPipeline:
             nice_to_have=kwargs.get("nice_to_have"),
         )
         return text, report
+
+    def interview_guide(
+        self,
+        resume: ResumeProfile,
+        job: JobSpec,
+        *,
+        duration_minutes: int = 45,
+        github: GitHubProfile | None = None,
+        score: CandidateScore | None = None,
+    ) -> InterviewGuide:
+        """Build an interview guide sized to the booked slot.
+
+        Takes the score so the questions can target exactly the requirements the
+        screening step could not verify — which is both the most useful thing to
+        ask about and the fairest, since it lets the candidate answer for
+        themselves rather than being filtered on an inference.
+        """
+        return generate_interview_guide(
+            resume, job, self.provider,
+            duration_minutes=duration_minutes, github=github, score=score,
+        )
 
     def build_job_spec(
         self,

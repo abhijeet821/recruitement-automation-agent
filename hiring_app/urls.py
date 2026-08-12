@@ -40,6 +40,10 @@ urlpatterns = [
         "campaign/<int:campaign_id>/candidate/<int:candidate_id>/rate/",
         views.rate_candidate, name="rate_candidate",
     ),
+    path(
+        "campaign/<int:campaign_id>/candidate/<int:candidate_id>/interview-guide/",
+        views.generate_interview_guide, name="generate_interview_guide",
+    ),
 
     # Actions
     path("campaign/<int:campaign_id>/invites/", views.send_invites, name="send_invites"),

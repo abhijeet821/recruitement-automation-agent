@@ -1,8 +1,8 @@
 {% extends 'hiring_app/base.html' %}
 {% load static %}
 
-{% block title %}HireAI — Automate Your Entire Hiring Pipeline with AI{% endblock %}
-{% block meta_desc %}HireAI uses Google Gemini to generate job descriptions, score resumes, schedule interviews, and send offers — all automated.{% endblock %}
+{% block title %}HireAI — Explainable Candidate Screening{% endblock %}
+{% block meta_desc %}HireAI drafts job descriptions, publishes an application form, and ranks applicants against that specific role with a score you can take apart and defend.{% endblock %}
 
 {% block content %}
 
@@ -12,17 +12,18 @@
 <section class="hero">
   <div class="hero-eyebrow">
     <span class="dot"></span>
-    Powered by Google Gemini AI
+    Runs on a local model — your candidate data never leaves your machine
   </div>
 
   <h1 class="hero-title">
-    Hire <span class="gradient-text" id="typing-text">Smarter</span><br>
-    with AI Automation
+    Screen <span class="gradient-text" id="typing-text">Smarter</span><br>
+    with scores you can defend
   </h1>
 
   <p class="hero-subtitle">
-    From job description to offer letter — HireAI automates your entire recruitment
-    pipeline using Google Workspace, Gemini AI, and LinkedIn.
+    From job description to offer letter, built on Google Workspace. Every candidate
+    score breaks down into weighted dimensions with the evidence behind each one —
+    and a separate confidence figure telling you how much we actually know.
   </p>
 
   <div class="hero-actions">
@@ -70,7 +71,7 @@
       <div class="flow-step">
         <div class="flow-icon" style="background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.4);">✍️</div>
         <div class="flow-step-title">Smart JD Draft</div>
-        <div class="flow-step-desc">Gemini AI generates a professional job description from your role title and experience requirements</div>
+        <div class="flow-step-desc">Drafts the JD with the sections and keywords recruiters expect, then grades it for completeness and inclusive language before you publish</div>
       </div>
 
       <div class="flow-step">
@@ -81,14 +82,14 @@
 
       <div class="flow-step">
         <div class="flow-icon" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4);">🧠</div>
-        <div class="flow-step-title">AI Scoring</div>
-        <div class="flow-step-desc">Syncs applicants, downloads resumes from Drive, and scores each candidate with AI</div>
+        <div class="flow-step-title">Explainable Scoring</div>
+        <div class="flow-step-desc">Reads each resume into a structured record, verifies every required skill, and weighs public code where it exists</div>
       </div>
 
       <div class="flow-step">
         <div class="flow-icon" style="background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.4);">📅</div>
         <div class="flow-step-title">Auto Schedule</div>
-        <div class="flow-step-desc">Sends personalized Google Calendar interview invites via Gmail to selected candidates</div>
+        <div class="flow-step-desc">Sends calendar invitations via Gmail to the candidates you shortlist, spaced into slots</div>
       </div>
 
       <div class="flow-step">
@@ -115,8 +116,8 @@
     <div class="grid grid-3">
       <div class="feature-card">
         <div class="feature-icon" style="background: rgba(124,58,237,0.15);">🤖</div>
-        <div class="feature-title">Gemini AI JDs</div>
-        <div class="feature-desc">Generate structured, professional job descriptions in seconds using Google Gemini 1.5 Flash.</div>
+        <div class="feature-title">Graded Job Descriptions</div>
+        <div class="feature-desc">Drafts with the sections recruiters expect, then scores the result 0–100 and flags masculine-coded or exclusionary wording that narrows your applicant pool.</div>
       </div>
 
       <div class="feature-card">
@@ -133,8 +134,8 @@
 
       <div class="feature-card">
         <div class="feature-icon" style="background: rgba(16,185,129,0.15);">🔍</div>
-        <div class="feature-title">Resume AI Scoring</div>
-        <div class="feature-desc">Downloads PDF resumes from Drive, parses text, and scores each candidate against the role.</div>
+        <div class="feature-title">Verified Skill Matching</div>
+        <div class="feature-desc">Embeddings shortlist plausible matches, then a model verifies each one — so "Java" is never mistaken for "Python" and "PyTorch" still counts as a deep-learning framework.</div>
       </div>
 
       <div class="feature-card">
@@ -147,6 +148,18 @@
         <div class="feature-icon" style="background: rgba(99,102,241,0.15);">💼</div>
         <div class="feature-title">LinkedIn Integration</div>
         <div class="feature-desc">Optionally post your job opening directly to LinkedIn with the application form link.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(20,184,166,0.15);">⚖️</div>
+        <div class="feature-title">Blind Screening</div>
+        <div class="feature-desc">Name, contact details and gendered terms are stripped before any model sees the resume. Skills, dates and achievements stay intact.</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon" style="background: rgba(168,85,247,0.15);">📈</div>
+        <div class="feature-title">Measured, Not Asserted</div>
+        <div class="feature-desc">The scorer is benchmarked against recruiter labels with Spearman, NDCG and precision@k — and against a keyword baseline it has to beat.</div>
       </div>
     </div>
   </div>
@@ -163,13 +176,16 @@
       <h2 class="section-title">Built on Industry Standards</h2>
     </div>
     <div class="tech-stack">
-      <div class="tech-badge">🤖 Google Gemini AI</div>
       <div class="tech-badge">🐍 Django (Python)</div>
+      <div class="tech-badge">🦙 Ollama (local LLM)</div>
+      <div class="tech-badge">🧭 bge-m3 embeddings</div>
+      <div class="tech-badge">✨ Gemini (optional)</div>
+      <div class="tech-badge">🔢 NumPy / SciPy</div>
       <div class="tech-badge">📊 Google Sheets API</div>
       <div class="tech-badge">📝 Google Forms API</div>
       <div class="tech-badge">📧 Gmail API</div>
-      <div class="tech-badge">📅 Google Calendar API</div>
       <div class="tech-badge">💾 Google Drive API</div>
+      <div class="tech-badge">🐙 GitHub API</div>
       <div class="tech-badge">💼 LinkedIn API</div>
       <div class="tech-badge">🔐 OAuth 2.0</div>
     </div>
@@ -191,9 +207,10 @@
       overflow: hidden;
     ">
       <div style="position: relative; z-index: 1;">
-        <h2 class="section-title" style="margin-bottom: 1rem;">Ready to Transform Your Hiring?</h2>
+        <h2 class="section-title" style="margin-bottom: 1rem;">Ready to Screen Better?</h2>
         <p style="color: var(--text-secondary); margin-bottom: 2rem; max-width: 440px; margin-left: auto; margin-right: auto;">
-          Create your account and start your first AI-powered recruitment campaign in minutes.
+          Create your account and run your first campaign in minutes — no API keys
+          required if you have Ollama running locally.
         </p>
         <a href="{% url 'register' %}" class="btn btn-primary btn-lg">
           🚀 Get Started Free
@@ -210,8 +227,9 @@
 <footer class="footer">
   <div class="container">
     <p class="footer-text">
-      Built with ❤️ using Django + Google Gemini AI &nbsp;·&nbsp;
-      <a href="https://github.com/mohitgupta4873/Recruitment_Automation_AI_Agent" target="_blank">GitHub</a>
+      Django · local LLM scoring · Google Workspace &nbsp;·&nbsp;
+      <a href="https://github.com/abhijeet821/recruitement-automation-agent"
+         target="_blank" rel="noopener">GitHub</a>
     </p>
   </div>
 </footer>

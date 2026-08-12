@@ -45,6 +45,14 @@ class MetricResult:
     rmse: float = float("nan")
     seconds: float = 0.0
     notes: list[str] = field(default_factory=list)
+    # 95% bootstrap intervals, keyed by metric name -> (low, high).
+    intervals: dict[str, tuple[float, float]] = field(default_factory=dict)
+
+    def interval_str(self, metric: str) -> str:
+        bounds = self.intervals.get(metric)
+        if not bounds or any(math.isnan(b) for b in bounds):
+            return ""
+        return f"[{bounds[0]:.2f}, {bounds[1]:.2f}]"
 
     def to_dict(self) -> dict:
         return {
@@ -61,6 +69,9 @@ class MetricResult:
             "mae": _round(self.mae, 2),
             "rmse": _round(self.rmse, 2),
             "seconds": round(self.seconds, 1),
+            "ci95": {
+                k: [_round(v[0]), _round(v[1])] for k, v in self.intervals.items()
+            },
             "notes": self.notes,
         }
 
@@ -151,6 +162,127 @@ def rmse(predicted: list[float], actual: list[float]) -> float:
     return float(np.sqrt(np.mean((np.asarray(predicted) - np.asarray(actual)) ** 2)))
 
 
+def bootstrap_ci(
+    predicted: list[float],
+    actual: list[float],
+    statistic,
+    *,
+    resamples: int = 2000,
+    confidence: float = 0.95,
+    seed: int = 12345,
+) -> tuple[float, float]:
+    """Percentile bootstrap interval for a paired ranking statistic.
+
+    Why this exists: on a small labelled set, a point estimate like
+    "Spearman 0.964 vs 0.942" invites a conclusion the data cannot support. The
+    two scorers are evaluated on the *same* candidates, so their errors are
+    correlated and the apparent gap is often well inside sampling noise.
+    Resampling candidates with replacement and recomputing the statistic shows
+    how much of the number is signal.
+
+    A fixed seed makes the interval reproducible, so re-running the harness does
+    not silently move the reported bounds.
+    """
+    n = len(predicted)
+    if n < 5:
+        return float("nan"), float("nan")
+
+    rng = np.random.default_rng(seed)
+    predicted_arr = np.asarray(predicted, dtype=float)
+    actual_arr = np.asarray(actual, dtype=float)
+
+    samples: list[float] = []
+    for _ in range(resamples):
+        idx = rng.integers(0, n, size=n)
+        # A resample can be degenerate (every label identical), which makes rank
+        # correlation undefined. Skip those rather than poisoning the interval
+        # with nan or silently coercing them to zero.
+        try:
+            value = statistic(predicted_arr[idx].tolist(), actual_arr[idx].tolist())
+        except Exception:  # noqa: BLE001
+            continue
+        if value is not None and not math.isnan(value):
+            samples.append(float(value))
+
+    if len(samples) < resamples * 0.5:
+        return float("nan"), float("nan")
+
+    alpha = (1.0 - confidence) / 2.0
+    return (
+        float(np.percentile(samples, 100 * alpha)),
+        float(np.percentile(samples, 100 * (1 - alpha))),
+    )
+
+
+def paired_bootstrap_delta(
+    predicted_a: list[float],
+    predicted_b: list[float],
+    actual: list[float],
+    statistic,
+    *,
+    resamples: int = 2000,
+    confidence: float = 0.95,
+    seed: int = 12345,
+) -> dict:
+    """Is scorer A genuinely better than scorer B?
+
+    This is the comparison that matters, and it is *not* answered by looking at
+    two separate confidence intervals. Both scorers are measured on the same
+    candidates, so their errors move together; two heavily overlapping intervals
+    can still hide a difference that is consistent on every resample.
+
+    The correct test resamples the candidates once per iteration and recomputes
+    **both** statistics on that same resample, then takes the difference. If the
+    resulting interval excludes zero, the ordering held across resamples.
+    ``win_rate`` reports how often A beat B directly.
+    """
+    n = len(actual)
+    out = {
+        "delta": float("nan"), "low": float("nan"), "high": float("nan"),
+        "win_rate": float("nan"), "significant": False, "n": n,
+    }
+    if n < 5 or len(predicted_a) != n or len(predicted_b) != n:
+        return out
+
+    rng = np.random.default_rng(seed)
+    a_arr = np.asarray(predicted_a, dtype=float)
+    b_arr = np.asarray(predicted_b, dtype=float)
+    actual_arr = np.asarray(actual, dtype=float)
+
+    try:
+        base_a = statistic(predicted_a, actual)
+        base_b = statistic(predicted_b, actual)
+        out["delta"] = float(base_a - base_b)
+    except Exception:  # noqa: BLE001
+        return out
+
+    deltas: list[float] = []
+    for _ in range(resamples):
+        idx = rng.integers(0, n, size=n)
+        labels = actual_arr[idx].tolist()
+        try:
+            value_a = statistic(a_arr[idx].tolist(), labels)
+            value_b = statistic(b_arr[idx].tolist(), labels)
+        except Exception:  # noqa: BLE001
+            continue
+        if value_a is None or value_b is None:
+            continue
+        if math.isnan(value_a) or math.isnan(value_b):
+            continue
+        deltas.append(float(value_a - value_b))
+
+    if len(deltas) < resamples * 0.5:
+        return out
+
+    alpha = (1.0 - confidence) / 2.0
+    out["low"] = float(np.percentile(deltas, 100 * alpha))
+    out["high"] = float(np.percentile(deltas, 100 * (1 - alpha)))
+    out["win_rate"] = float(np.mean([d > 0 for d in deltas]))
+    # Significant only when the whole interval sits on one side of zero.
+    out["significant"] = bool(out["low"] > 0 or out["high"] < 0)
+    return out
+
+
 def evaluate(
     scorer_name: str,
     predicted: list[float],
@@ -159,6 +291,8 @@ def evaluate(
     label_scale: float = 5.0,
     relevance_threshold: float = 3.0,
     seconds: float = 0.0,
+    with_intervals: bool = True,
+    resamples: int = 2000,
 ) -> MetricResult:
     """Compute the full metric set for one scorer's predictions."""
     result = MetricResult(scorer=scorer_name, n=len(predicted), seconds=seconds)
@@ -181,10 +315,30 @@ def evaluate(
     result.mae = mae(predicted, scaled)
     result.rmse = rmse(predicted, scaled)
 
+    if with_intervals:
+        result.intervals["spearman"] = bootstrap_ci(
+            predicted, actual, lambda p, a: spearman(p, a)[0], resamples=resamples
+        )
+        result.intervals["kendall_tau"] = bootstrap_ci(
+            predicted, actual, kendall_tau, resamples=resamples
+        )
+        result.intervals["ndcg@5"] = bootstrap_ci(
+            predicted, actual, lambda p, a: ndcg_at_k(p, a, 5), resamples=resamples
+        )
+
     if math.isnan(result.spearman):
         result.notes.append("Spearman undefined — scores or labels are constant.")
     if len(predicted) < 20:
         result.notes.append(
             f"Only {len(predicted)} candidates; treat differences between scorers as indicative."
+        )
+
+    width = result.intervals.get("spearman")
+    if width and not any(math.isnan(b) for b in width) and (width[1] - width[0]) > 0.3:
+        # Name the scorer: these notes are pooled across the comparison table,
+        # so an unattributed warning is not actionable.
+        result.notes.append(
+            f"{scorer_name}: Spearman 95% CI spans {width[1] - width[0]:.2f} — too "
+            f"wide to rank scorers on this metric alone."
         )
     return result

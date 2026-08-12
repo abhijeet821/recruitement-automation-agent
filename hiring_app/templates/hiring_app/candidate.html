@@ -203,6 +203,126 @@
       {% endif %}
     </div>
 
+    <!-- Interview guide -->
+    <div class="card mb-3" id="interview-guide" style="border-left:3px solid #06b6d4;">
+      <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+        <h3 style="font-size:0.95rem; font-weight:700; margin:0;">Interview guide</h3>
+        {% if guide and guide.ok %}
+        <button type="button" class="btn btn-sm btn-outline" onclick="window.print()">Print</button>
+        {% endif %}
+      </div>
+
+      <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.9rem;">
+        Questions written from <em>this</em> candidate's résumé, projects and public code —
+        each one cites the detail that prompted it. Tell us how long the slot is and
+        the plan is sized to fit.
+      </p>
+
+      <form method="post" action="{% url 'generate_interview_guide' campaign.pk candidate.pk %}"
+            class="flex items-end gap-2 flex-wrap mb-3">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label" for="duration_minutes">Interview length</label>
+          <select name="duration_minutes" id="duration_minutes" class="form-control"
+                  style="max-width:190px;">
+            {% for d in durations %}
+            <option value="{{ d }}" {% if d == default_duration %}selected{% endif %}>
+              {{ d }} minutes
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          {% if guide and guide.ok %}Regenerate{% else %}Prepare questions{% endif %}
+        </button>
+      </form>
+
+      {% if guide and guide.ok %}
+        <div class="alert alert-info mb-3" style="font-size:0.8rem;">
+          <strong>{{ guide.questions|length }} question{{ guide.questions|length|pluralize }}</strong>
+          for a {{ guide.duration_minutes }}-minute slot ·
+          ~{{ guide.estimated_minutes }} min of questions
+          {% if guide.budget %}
+            · {{ guide.budget.warmup_minutes }} min intro
+            · {{ guide.budget.wrap_up_minutes }} min for their questions
+          {% endif %}
+        </div>
+
+        {% if guide.focus %}
+        <p style="font-size:0.86rem; line-height:1.6; margin-bottom:0.8rem;">
+          <strong>What this interview needs to establish:</strong> {{ guide.focus }}
+        </p>
+        {% endif %}
+
+        {% if guide.opening %}
+        <div style="font-size:0.82rem; color:var(--text-secondary); font-style:italic;
+                    border-left:2px solid var(--border); padding-left:0.7rem; margin-bottom:1rem;">
+          Opening: “{{ guide.opening }}”
+        </div>
+        {% endif %}
+
+        {% for q in guide.questions %}
+        <div style="padding:0.85rem 0; border-top:1px solid var(--border);">
+          <div class="flex items-center gap-2 mb-1 flex-wrap">
+            <span class="badge badge-cyan">{{ forloop.counter }}</span>
+            <span class="badge badge-gray">{{ q.category_label }}</span>
+            <span style="font-size:0.72rem; color:var(--text-muted);">~{{ q.minutes }} min</span>
+          </div>
+
+          <div style="font-size:0.9rem; font-weight:600; line-height:1.5; margin-bottom:0.4rem;">
+            {{ q.question }}
+          </div>
+
+          {% if q.grounded_in %}
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">
+            <strong>From their background:</strong> “{{ q.grounded_in }}”
+          </div>
+          {% endif %}
+          {% if q.why %}
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:0.3rem;">
+            <strong>Why ask:</strong> {{ q.why }}
+          </div>
+          {% endif %}
+
+          {% if q.listen_for %}
+          <div style="font-size:0.75rem; color:var(--text-muted);">
+            <strong>Listen for:</strong>
+            <ul style="margin:0.2rem 0 0; padding-left:1.1rem;">
+              {% for point in q.listen_for %}<li>{{ point }}</li>{% endfor %}
+            </ul>
+          </div>
+          {% endif %}
+
+          {% if q.follow_up %}
+          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:0.3rem;">
+            <strong>If the answer is thin:</strong> {{ q.follow_up }}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+
+        {% if guide.warnings %}
+        <div class="alert alert-warning" style="margin-top:0.9rem; font-size:0.78rem;">
+          <ul style="margin:0; padding-left:1.1rem;">
+            {% for w in guide.warnings %}<li>{{ w }}</li>{% endfor %}
+          </ul>
+        </div>
+        {% endif %}
+
+        <p style="font-size:0.7rem; color:var(--text-muted); margin-top:0.9rem;
+                  border-top:1px solid var(--border); padding-top:0.6rem;">
+          A guide, not a script. Follow the conversation where it goes — and note that
+          questions targeting unverified requirements exist so the candidate can
+          demonstrate a skill the screening step could not find, not to catch them out.
+        </p>
+      {% elif candidate.interview_guide %}
+        <p style="font-size:0.82rem; color:var(--text-muted);">
+          No usable questions were produced last time. Try again, or check that the
+          résumé text extracted correctly.
+        </p>
+      {% endif %}
+    </div>
+
     <!-- Recruiter rating -->
     <div class="card" style="border-left:3px solid #7c3aed;">
       <h3 style="font-size:0.95rem; font-weight:700; margin-bottom:0.4rem;">Your rating</h3>

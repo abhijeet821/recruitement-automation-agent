@@ -16,7 +16,13 @@ from dataclasses import dataclass, field
 from matching.config import MatchingConfig, get_config
 from matching.enrichment.github import analyse_github
 from matching.evaluation.dataset import EvaluationSet, LabelledCandidate
-from matching.evaluation.metrics import MetricResult, evaluate
+from matching.evaluation.metrics import (
+    MetricResult,
+    evaluate,
+    ndcg_at_k,
+    paired_bootstrap_delta,
+    spearman,
+)
 from matching.llm import get_provider
 from matching.parsing.resume import parse_resume
 from matching.schemas import CandidateScore, GitHubProfile, ResumeProfile
@@ -42,6 +48,9 @@ class ComparisonReport:
     n: int
     results: list[MetricResult] = field(default_factory=list)
     per_candidate: dict[str, dict[str, float]] = field(default_factory=dict)
+    # Paired bootstrap of (best scorer - baseline), keyed by metric name.
+    head_to_head: dict[str, dict] = field(default_factory=dict)
+    compared: tuple[str, str] | None = None
 
     def best(self, metric: str = "spearman") -> MetricResult | None:
         ranked = [r for r in self.results if not _is_nan(getattr(r, metric, float("nan")))]
@@ -54,13 +63,15 @@ class ComparisonReport:
             "dataset": self.dataset,
             "n": self.n,
             "results": [r.to_dict() for r in self.results],
+            "head_to_head": self.head_to_head,
+            "compared": list(self.compared) if self.compared else None,
             "per_candidate": self.per_candidate,
         }
 
     def as_table(self) -> str:
         """Fixed-width comparison table for the CLI."""
-        headers = ["scorer", "n", "spearman", "kendall", "ndcg@5", "P@5", "R@5", "MAE", "secs"]
-        widths = [22, 4, 9, 8, 7, 6, 6, 7, 6]
+        headers = ["scorer", "n", "spearman", "95% CI", "ndcg@5", "95% CI", "P@5", "MAE", "secs"]
+        widths = [20, 4, 8, 14, 7, 14, 5, 6, 6]
 
         def row(cells: list[str]) -> str:
             return "  ".join(c.ljust(w)[:w] for c, w in zip(cells, widths, strict=True))
@@ -72,13 +83,34 @@ class ComparisonReport:
                 data["scorer"],
                 str(data["n"]),
                 _fmt(data["spearman"]),
-                _fmt(data["kendall_tau"]),
+                result.interval_str("spearman") or "—",
                 _fmt(data["ndcg@5"]),
-                _fmt(data["precision@5"]),
-                _fmt(data["recall@5"]),
+                result.interval_str("ndcg@5") or "—",
+                _fmt(data["precision@5"], 2),
                 _fmt(data["mae"], 1),
                 f"{data['seconds']:.1f}",
             ]))
+        return "\n".join(lines)
+
+    def significance_summary(self) -> str:
+        """Plain-English reading of the paired comparison."""
+        if not self.head_to_head or not self.compared:
+            return ""
+        winner, baseline = self.compared
+        lines = [f"Paired bootstrap: {winner} vs {baseline} (same candidates, 2000 resamples)"]
+        for metric, stats in self.head_to_head.items():
+            if _is_nan(stats.get("delta")):
+                continue
+            verdict = (
+                "significant — the interval excludes zero"
+                if stats["significant"]
+                else "NOT significant — the interval contains zero"
+            )
+            lines.append(
+                f"  {metric:<10} delta {stats['delta']:+.3f}  "
+                f"95% CI [{stats['low']:+.3f}, {stats['high']:+.3f}]  "
+                f"won {stats['win_rate']:.0%} of resamples  — {verdict}"
+            )
         return "\n".join(lines)
 
 
@@ -168,7 +200,43 @@ def compare(
     report.results.sort(
         key=lambda r: (-r.spearman if not _is_nan(r.spearman) else 1.0),
     )
+
+    _add_head_to_head(report, labels)
     return report
+
+
+def _add_head_to_head(report: ComparisonReport, labels: list[float]) -> None:
+    """Paired-bootstrap the best scorer against the legacy keyword baseline.
+
+    Two separate confidence intervals cannot answer "is A better than B" when
+    both are measured on the same candidates — see ``paired_bootstrap_delta``.
+    """
+    best = report.best("spearman")
+    baseline_name = "keyword_legacy"
+    if best is None or best.scorer == baseline_name:
+        return
+    if baseline_name not in {r.scorer for r in report.results}:
+        return
+
+    ids = list(report.per_candidate)
+    try:
+        best_preds = [report.per_candidate[i][best.scorer] for i in ids]
+        base_preds = [report.per_candidate[i][baseline_name] for i in ids]
+        ordered_labels = [report.per_candidate[i]["label"] for i in ids]
+    except KeyError:
+        return
+
+    _ = labels  # ordering comes from per_candidate to stay aligned with predictions
+
+    report.compared = (best.scorer, baseline_name)
+    report.head_to_head = {
+        "spearman": paired_bootstrap_delta(
+            best_preds, base_preds, ordered_labels, lambda p, a: spearman(p, a)[0]
+        ),
+        "ndcg@5": paired_bootstrap_delta(
+            best_preds, base_preds, ordered_labels, lambda p, a: ndcg_at_k(p, a, 5)
+        ),
+    }
 
 
 def _is_nan(value) -> bool:

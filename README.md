@@ -23,33 +23,53 @@ Measured on a 14-candidate labelled set for a mid-level Python backend role
 (`matching/evaluation/golden_set.json`), scored with local `qwen3:14b` +
 `bge-m3`:
 
-| Scorer | Spearman ρ | Kendall τ | NDCG@5 | P@5 | MAE |
+| Scorer | Spearman ρ | 95% CI | NDCG@5 | 95% CI | MAE |
 |---|---|---|---|---|---|
-| **ensemble** (production) | **0.964** | **0.897** | **0.956** | 1.000 | 10.3 |
-| `keyword_jd` (JD-aware substrings) | 0.942 | 0.888 | 0.716 | 1.000 | 10.2 |
-| `keyword_legacy` (the original scorer) | 0.822 | 0.713 | 0.701 | 1.000 | 14.3 |
-| `random` | −0.354 | −0.291 | 0.323 | 0.400 | 39.7 |
+| **ensemble** (production) | **0.964** | [0.86, 0.99] | **0.956** | [0.90, 1.00] | 10.3 |
+| `keyword_jd` (JD-aware substrings) | 0.942 | [0.78, 0.99] | 0.716 | [0.67, 1.00] | 10.2 |
+| `keyword_legacy` (the original scorer) | 0.822 | [0.46, 0.97] | 0.701 | [0.45, 0.98] | 14.3 |
+| `random` | −0.354 | [−0.83, 0.35] | 0.323 | [0.02, 0.72] | 39.7 |
 
-The headline is **NDCG@5: 0.956 vs 0.701**, a 36% relative improvement in the
-quality of the top of the ranking — which is the part a recruiter actually
-reads.
+### The honest reading
 
-The set contains deliberate traps for literal matching. The clearest:
+The ensemble is ahead on every metric. **That gap is not statistically
+significant at n=14**, and the confidence intervals are the reason I can say so
+rather than guess.
+
+Comparing two scorers by their separate intervals is the wrong test — both are
+measured on the *same* candidates, so their errors are correlated. The right one
+is a paired bootstrap: resample the candidates, recompute *both* statistics on
+that same resample, and look at the difference.
+
+| Comparison | Δ | 95% CI | Won resamples | Significant |
+|---|---|---|---|---|
+| ensemble − legacy (Spearman) | +0.143 | [−0.030, +0.487] | 93% | no |
+| ensemble − legacy (NDCG@5) | +0.255 | [+0.000, +0.554] | 97% | borderline |
+| ensemble − keyword_jd (Spearman) | +0.022 | [−0.080, +0.160] | 63% | no |
+
+So the defensible claim is: **the ensemble beat the legacy scorer on 93–97% of
+resamples, but 14 candidates cannot establish the difference at 95%
+confidence.** Roughly 60–100 labelled candidates would be needed for an effect
+this size. Reproduce with `manage.py evaluate_scorer`.
+
+What the sample *does* establish is the qualitative failure mode, which is not a
+matter of statistical power. The set contains deliberate traps for literal
+matching:
 
 | Candidate | Human label | Legacy keyword score | Ensemble |
 |---|---|---|---|
-| Node.js backend dev | 3 / 5 | **88.9** (its joint-highest) | 72.3 |
+| Node.js backend dev | 3 / 5 | **88.9** (its joint-highest) | 74.5 |
 | Senior Java/Spring engineer | 2 / 5 | 66.7 | 53.1 |
 | Senior Python/Django engineer | 5 / 5 | 77.8 | 91.2 |
 
 The legacy scorer ranked a Node.js developer above every genuine Python
 candidate, because `node`, `api`, `rest`, `sql` and `docker` are all in its
-hardcoded list.
+hardcoded list. That is a structural defect in the method, visible in a single
+example, and no amount of sample size makes it acceptable.
 
-**Read these numbers honestly.** n=14 on synthetic resumes is enough to
-demonstrate that the pipeline works and that the traps behave as designed. It is
-not enough to prove the weights are optimal. That is why the app collects
-recruiter ratings in the review flow — see [Closing the loop](#closing-the-loop).
+The app collects recruiter ratings during normal review precisely so this
+comparison can be re-run on real labels at a usable sample size — see
+[Closing the loop](#closing-the-loop).
 
 ---
 
@@ -135,7 +155,7 @@ matching/                    ← pure Python, zero Django imports
 ├── scoring/                 ensemble, LLM rubric, 3 baselines
 ├── fairness/                blind-screening redaction, adverse-impact audit
 ├── evaluation/              metrics, harness, labelled golden set
-├── generation/              JD drafting + measurable quality grading
+├── generation/              JD drafting/grading + duration-sized interview guides
 └── pipeline.py              the only entry point the web layer imports
 
 hiring_app/                  ← Django
@@ -181,6 +201,51 @@ proprietary. Confidence reports how much was known; the score reports quality.
 Those are different questions and the UI shows both.
 
 ---
+
+## Interview guides
+
+A score tells a recruiter *who* to interview. It does not help them run the
+interview. Each candidate page generates questions written from **that
+candidate's** résumé, projects and public code, sized to the slot the company
+actually books.
+
+**Grounding is the whole feature.** Every question must cite the specific detail
+that prompted it, and any question that fails to is discarded before it is shown
+— an ungrounded question looks personalised and is not, which is worse than
+having none. Real output for a senior Python candidate:
+
+> **You designed idempotent ledger writes on PostgreSQL using advisory locks.
+> What trade-offs did you consider versus row-level locks or optimistic
+> concurrency control?**
+> *From their background:* "Designed idempotent ledger writes on PostgreSQL with
+> advisory locks; zero double-charge incidents across 18 months and 2.1M transactions."
+> *Listen for:* trade-offs between the mechanisms · performance/correctness
+> reasoning · reference to the real-world impact
+
+**Sizing.** The recruiter enters the booked duration; the count follows from it.
+Warm-up and the candidate's own questions are reserved, time is budgeted per
+category (a project deep-dive genuinely costs more than a skill check), and
+categories with no evidence behind them are dropped with their time
+redistributed — the same rule the scorer uses for missing dimensions.
+
+| Slot | Questions | Shape |
+|---|---|---|
+| 15 min | 2 | skill checks only — no room for a deep-dive |
+| 30 min | 3 | 1 skill · 1 project · 1 gap probe |
+| 45 min | 6 | 2 skill · 1 project · 1 GitHub · 1 gap · 1 experience |
+| 60 min | 9 | adds a second project deep-dive and working style |
+| 90 min | 14 | 3 project deep-dives, 2 gap probes, more depth |
+
+When the slot is too short for everything, the *least valuable* category is
+dropped rather than the most expensive — trimming by cost would strip the
+project deep-dive from every short interview, which is exactly backwards.
+
+**Gap probes are a fairness feature, not a gotcha.** Requirements the scorer
+could not verify are fed in deliberately, so the interview gives the candidate a
+chance to demonstrate a skill the automated step missed, instead of them being
+filtered on an inference. The prompt forbids questions about age, family,
+nationality, religion, health, marital or visa status, or the personal reasons
+behind a career break.
 
 ## Fairness
 
@@ -231,16 +296,33 @@ Google Workspace features (forms, sheets, email) need OAuth credentials — put
 `client_secrets.json` in the project root, or set `GOOGLE_CLIENT_SECRETS`.
 **Scoring works fully without them.**
 
+### Seeing it work without Google
+
+Applicants normally arrive through a Google Form, which makes the screening half
+awkward to demo. This loads the 14 labelled candidates directly:
+
+```bash
+python manage.py seed_demo          # ~7 min: runs the real pipeline on each CV
+python manage.py seed_demo --fast   # ~2 min: skips the LLM rubric
+```
+
+You get a scored campaign with the candidate table, per-dimension score
+breakdowns, evidence panels and the recruiter-rating flow — and because the
+golden-set labels are seeded as ratings, `evaluate_scorer --campaign <id>`
+benchmarks the scorer against them straight away. Seeded ratings are marked
+synthetic in the UI so they cannot be mistaken for real recruiter judgements.
+
 ### Commands
 
 | Command | Purpose |
 |---|---|
 | `manage.py doctor` | Check every dependency; says exactly what to fix |
-| `manage.py evaluate_scorer` | Benchmark the scorer against all baselines |
+| `manage.py seed_demo` | Load the labelled set as a scored campaign — the whole screening UI, with no Google setup |
+| `manage.py evaluate_scorer` | Benchmark against all baselines, with bootstrap CIs and a paired significance test |
 | `manage.py evaluate_scorer --campaign N` | Benchmark against real recruiter ratings |
 | `manage.py calibrate_similarity` | Re-measure embedding separation |
 | `manage.py audit_fairness --campaign N` | Adverse-impact report |
-| `pytest` | 117 tests, no model server required |
+| `pytest` | 229 tests, no model server required |
 
 ---
 
@@ -308,9 +390,11 @@ evaluation harness; fairness tooling.
 
 ## Honest limitations
 
-1. **n=14, synthetic.** The evaluation demonstrates the pipeline and the trap
-   behaviour. It does not establish that the weights generalise. Treat the
-   scorer as a ranking aid, never an automated filter.
+1. **n=14, synthetic, and underpowered.** The evaluation demonstrates the
+   pipeline and the trap behaviour, but the paired bootstrap shows the gap over
+   the keyword baseline is *not* significant at 95% confidence — roughly 60–100
+   labelled candidates would be needed. It does not establish that the weights
+   generalise. Treat the scorer as a ranking aid, never an automated filter.
 2. **Local inference is slow** — roughly 25–30 s per candidate on `qwen3:14b`
    (extraction + verification + rubric). Hosted models or a smaller local model
    trade accuracy for speed; `RUBRIC_ENABLED=False` is ~3× faster and measurably
@@ -347,6 +431,10 @@ evaluation harness; fairness tooling.
   The old system collapsed both into a zero.
 - **Keeping the old scorer as a baseline.** Deleting it would have made the
   improvement unmeasurable.
+- **Reporting a negative result about my own work.** The scorer wins on every
+  metric, and I still report that the difference is not significant at this
+  sample size, with the number of labels it would take to settle it. A point
+  estimate that cannot survive a paired bootstrap is not a result yet.
 - **Knowing when *not* to use the model.** Emails and GitHub handles are
   extracted with regex — exact, free, instant. A hallucinated GitHub username
   means scoring the wrong person's code, which is the worst failure a hiring

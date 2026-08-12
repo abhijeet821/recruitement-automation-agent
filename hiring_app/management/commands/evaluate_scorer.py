@@ -59,15 +59,28 @@ class Command(BaseCommand):
         self.stdout.write(report.as_table())
 
         best = report.best("spearman")
-        baseline = next((r for r in report.results if r.scorer == "keyword_legacy"), None)
-        if best and baseline and baseline.spearman == baseline.spearman:
-            delta = best.spearman - baseline.spearman
+        if best:
             self.stdout.write("")
             self.stdout.write(
-                self.style.SUCCESS(
-                    f"Best: {best.scorer} (Spearman {best.spearman:.3f}), "
-                    f"{delta:+.3f} against the legacy keyword scorer."
-                )
+                self.style.SUCCESS(f"Best by Spearman: {best.scorer} ({best.spearman:.3f})")
+            )
+
+        summary = report.significance_summary()
+        if summary:
+            self.stdout.write("")
+            self.stdout.write(self.style.MIGRATE_HEADING("Is the difference real?"))
+            for line in summary.splitlines():
+                if "NOT significant" in line:
+                    self.stdout.write(self.style.WARNING(line))
+                elif "significant" in line:
+                    self.stdout.write(self.style.SUCCESS(line))
+                else:
+                    self.stdout.write(line)
+            self.stdout.write("")
+            self.stdout.write(
+                "  A point-estimate gap is not evidence on its own. Both scorers see "
+                "the same\n  candidates, so only a paired resample shows whether the "
+                "ordering survives."
             )
 
         notes = {note for r in report.results for note in r.notes}

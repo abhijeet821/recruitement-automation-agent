@@ -16,9 +16,11 @@ from matching.evaluation.harness import (
 )
 from matching.evaluation.metrics import (
     MetricResult,
+    bootstrap_ci,
     evaluate,
     kendall_tau,
     ndcg_at_k,
+    paired_bootstrap_delta,
     precision_at_k,
     recall_at_k,
     spearman,
@@ -36,9 +38,11 @@ __all__ = [
     "default_scorers",
     "prepare",
     "MetricResult",
+    "bootstrap_ci",
     "evaluate",
     "kendall_tau",
     "ndcg_at_k",
+    "paired_bootstrap_delta",
     "precision_at_k",
     "recall_at_k",
     "spearman",

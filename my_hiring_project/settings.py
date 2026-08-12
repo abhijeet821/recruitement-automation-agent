@@ -162,13 +162,14 @@ TESTING = "pytest" in sys.modules or "test" in sys.argv
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    # The manifest backend requires `collectstatic` to have run, which is right
-    # for production and wrong for a test run — under test it makes every page
-    # render fail with a missing-manifest error unrelated to what is being tested.
+    # The manifest backend requires `collectstatic` to have run first. That is
+    # correct for production and wrong everywhere else: under test it fails every
+    # page render with a missing-manifest error, and in development it means
+    # `runserver` breaks until you remember to run collectstatic.
     "staticfiles": {
         "BACKEND": (
             "django.contrib.staticfiles.storage.StaticFilesStorage"
-            if TESTING
+            if (TESTING or DEBUG)
             else "whitenoise.storage.CompressedManifestStaticFilesStorage"
         )
     },

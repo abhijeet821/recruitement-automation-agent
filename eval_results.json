@@ -13,9 +13,23 @@
       "precision@5": 1.0,
       "recall@5": 0.625,
       "precision@10": 0.8,
-      "mae": 10.38,
+      "mae": 10.33,
       "rmse": 11.08,
-      "seconds": 511.3,
+      "seconds": 412.9,
+      "ci95": {
+        "spearman": [
+          0.857,
+          0.992
+        ],
+        "kendall_tau": [
+          0.767,
+          0.97
+        ],
+        "ndcg@5": [
+          0.896,
+          1.0
+        ]
+      },
       "notes": [
         "Only 14 candidates; treat differences between scorers as indicative."
       ]
@@ -34,6 +48,20 @@
       "mae": 10.24,
       "rmse": 13.36,
       "seconds": 0.0,
+      "ci95": {
+        "spearman": [
+          0.778,
+          0.993
+        ],
+        "kendall_tau": [
+          0.715,
+          0.981
+        ],
+        "ndcg@5": [
+          0.67,
+          1.0
+        ]
+      },
       "notes": [
         "Only 14 candidates; treat differences between scorers as indicative."
       ]
@@ -52,8 +80,23 @@
       "mae": 14.29,
       "rmse": 17.21,
       "seconds": 0.0,
+      "ci95": {
+        "spearman": [
+          0.464,
+          0.972
+        ],
+        "kendall_tau": [
+          0.371,
+          0.928
+        ],
+        "ndcg@5": [
+          0.445,
+          0.981
+        ]
+      },
       "notes": [
-        "Only 14 candidates; treat differences between scorers as indicative."
+        "Only 14 candidates; treat differences between scorers as indicative.",
+        "Spearman 95% CI spans 0.51 \u2014 the point estimate is not precise enough to rank scorers on this metric alone."
       ]
     },
     {
@@ -70,10 +113,47 @@
       "mae": 39.7,
       "rmse": 48.56,
       "seconds": 0.0,
+      "ci95": {
+        "spearman": [
+          -0.832,
+          0.355
+        ],
+        "kendall_tau": [
+          -0.728,
+          0.259
+        ],
+        "ndcg@5": [
+          0.018,
+          0.723
+        ]
+      },
       "notes": [
-        "Only 14 candidates; treat differences between scorers as indicative."
+        "Only 14 candidates; treat differences between scorers as indicative.",
+        "Spearman 95% CI spans 1.19 \u2014 the point estimate is not precise enough to rank scorers on this metric alone."
       ]
     }
+  ],
+  "head_to_head": {
+    "spearman": {
+      "delta": 0.14264471947415014,
+      "low": -0.030039454262964598,
+      "high": 0.4870682505019613,
+      "win_rate": 0.9325,
+      "significant": false,
+      "n": 14
+    },
+    "ndcg@5": {
+      "delta": 0.2548227324025779,
+      "low": 0.0,
+      "high": 0.553529010907131,
+      "win_rate": 0.9725,
+      "significant": false,
+      "n": 14
+    }
+  },
+  "compared": [
+    "ensemble",
+    "keyword_legacy"
   ],
   "per_candidate": {
     "c01": {
@@ -109,28 +189,28 @@
       "random": 76.5,
       "keyword_legacy": 77.78,
       "keyword_jd": 83.33,
-      "ensemble": 88.19
+      "ensemble": 87.53
     },
     "c06": {
       "label": 3.0,
       "random": 46.12,
       "keyword_legacy": 66.67,
       "keyword_jd": 66.67,
-      "ensemble": 76.86
+      "ensemble": 77.71
     },
     "c14": {
       "label": 3.0,
       "random": 16.85,
       "keyword_legacy": 44.44,
       "keyword_jd": 50.0,
-      "ensemble": 70.41
+      "ensemble": 69.76
     },
     "c05": {
       "label": 3.0,
       "random": 12.03,
       "keyword_legacy": 88.89,
       "keyword_jd": 50.0,
-      "ensemble": 74.53
+      "ensemble": 74.16
     },
     "c08": {
       "label": 2.0,
@@ -144,7 +224,7 @@
       "random": 32.11,
       "keyword_legacy": 66.67,
       "keyword_jd": 33.33,
-      "ensemble": 27.5
+      "ensemble": 27.38
     },
     "c09": {
       "label": 1.0,
@@ -165,7 +245,7 @@
       "random": 94.73,
       "keyword_legacy": 0.0,
       "keyword_jd": 0.0,
-      "ensemble": 12.4
+      "ensemble": 12.49
     },
     "c12": {
       "label": 0.0,

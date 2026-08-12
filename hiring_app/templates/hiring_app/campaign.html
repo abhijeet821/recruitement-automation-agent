@@ -187,7 +187,7 @@
       </div>
       <div class="flex items-center gap-3 flex-wrap">
         <div style="flex:1; font-size:0.85rem;">
-          <strong>{{ candidates|length }}</strong> screened
+          <strong>{{ total_candidates }}</strong> screened
           {% if strong_count %} · <strong style="color:#10b981;">{{ strong_count }}</strong> strong{% endif %}
           {% if review_count %} · <strong style="color:#f59e0b;">{{ review_count }}</strong> need review{% endif %}
         </div>
@@ -215,7 +215,13 @@
         <div class="step-number amber">4</div>
         <div>
           <div class="step-title">Shortlist &amp; schedule</div>
-          <div class="step-desc">Select candidates and send calendar invitations. Slots are spaced 45 minutes apart.</div>
+          <div class="step-desc">
+            Select candidates and send calendar invitations. Slots are spaced 45 minutes apart.
+            {% if is_paginated %}
+              Selections apply to the current page only — candidates are ordered by
+              score, so the strongest are on page 1.
+            {% endif %}
+          </div>
         </div>
       </div>
 
@@ -281,6 +287,28 @@
           </table>
         </div>
       </form>
+
+      {% if is_paginated %}
+      <nav class="flex items-center justify-between mt-3 flex-wrap gap-2"
+           style="font-size:0.8rem; color:var(--text-muted);"
+           aria-label="Candidate pages">
+        <span>
+          Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
+          of {{ total_candidates }}
+        </span>
+        <span class="flex gap-2 items-center">
+          {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}#step-candidates"
+               class="btn btn-sm btn-outline">Previous</a>
+          {% endif %}
+          <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}#step-candidates"
+               class="btn btn-sm btn-outline">Next</a>
+          {% endif %}
+        </span>
+      </nav>
+      {% endif %}
     </div>
 
     <!-- ═══ STEP 5: Decisions ═══ -->
@@ -289,7 +317,13 @@
         <div class="step-number green">5</div>
         <div>
           <div class="step-title">Decisions</div>
-          <div class="step-desc">Only the candidates you tick below are contacted.</div>
+          <div class="step-desc">
+            Only the candidates you tick below are contacted.
+            {% if is_paginated %}
+              This table shows page {{ page_obj.number }} of
+              {{ page_obj.paginator.num_pages }}; work through the pages to notify everyone.
+            {% endif %}
+          </div>
         </div>
       </div>
 

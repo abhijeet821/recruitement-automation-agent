@@ -26,6 +26,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.db.models import Avg, Count, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -44,12 +45,42 @@ from hiring_app.services.google_workspace import (
 from hiring_app.services.linkedin import LinkedInError, post_job
 from hiring_app.services.screening import ensure_job_spec
 from matching.config import get_config
+from matching.generation.interview import COMMON_DURATIONS
 from matching.generation.jd import analyse_jd
 from matching.pipeline import ScreeningPipeline
 
 logger = logging.getLogger("hiring_app")
 
 INTERVIEW_SLOT_MINUTES = 45
+CANDIDATES_PER_PAGE = 50
+
+# Rate limits for endpoints that cost real money or GPU time. Previously only
+# login and register were limited, so any authenticated user could saturate the
+# model backend — a single click on "Sync" queues minutes of inference, and
+# "Draft JD" is a model call per press.
+#
+# Limits are per *user* rather than per IP: these views are all login-required,
+# and an IP key would throttle a whole office sharing one NAT address.
+# block=False lets the view render a readable explanation instead of a bare 403.
+RATE_JD = "20/h"       # drafting is iterative; allow redrafting, not hammering
+RATE_SYNC = "12/h"     # syncing more often than every 5 minutes achieves nothing
+RATE_RESCORE = "6/h"   # re-scores every candidate — the most expensive operation
+RATE_LAUNCH = "10/h"   # creates Google Forms/Sheets resources
+RATE_INTERVIEW = "30/h"  # one model call per candidate being prepared for
+
+
+def _rate_limited(request, what: str) -> bool:
+    """Report a throttled request to the user. Returns True if limited."""
+    if getattr(request, "limited", False):
+        logger.warning("Rate limit hit by %s on %s", request.user, what)
+        messages.error(
+            request,
+            f"You've made too many {what} requests in a short time. "
+            f"This limit exists because each one takes real compute. "
+            f"Please wait a few minutes and try again.",
+        )
+        return True
+    return False
 
 
 # ─────────────────────────────────────────────────────────────
@@ -241,19 +272,37 @@ def campaign_new(request):
 @login_required
 def campaign_detail(request, campaign_id: int):
     campaign = _own_campaign(request, campaign_id)
-    candidates = list(campaign.candidates.all())
+
+    queryset = campaign.candidates.all()
+
+    # Summary counts come from the database over the *whole* campaign, not the
+    # current page — otherwise "3 strong candidates" would silently mean
+    # "3 strong candidates on page 2".
+    stats = queryset.aggregate(
+        total=Count("id"),
+        strong=Count("id", filter=Q(overall_score__gte=75)),
+        review=Count("id", filter=Q(confidence__lt=0.5)),
+    )
+
+    # Without paging, a 500-applicant campaign rendered 1,000 table rows in one
+    # response and deserialised a score blob for every one of them.
+    paginator = Paginator(queryset, CANDIDATES_PER_PAGE)
+    page = paginator.get_page(request.GET.get("page"))
 
     return render(request, "hiring_app/campaign.html", {
         "campaign": campaign,
-        "candidates": candidates,
+        "candidates": page.object_list,
+        "page_obj": page,
+        "is_paginated": page.has_other_pages(),
+        "total_candidates": stats["total"] or 0,
+        "strong_count": stats["strong"] or 0,
+        "review_count": stats["review"] or 0,
         "job_spec": campaign.get_job_spec(),
         "jd_quality": campaign.jd_quality or None,
         "other_campaigns": Campaign.objects.filter(owner=request.user).exclude(pk=campaign.pk)[:20],
         "has_google": google_auth.has_google(request.user),
         "active_job": jobs.active_job(campaign),
         "engine": _engine_status(),
-        "strong_count": sum(1 for c in candidates if c.overall_score >= 75),
-        "review_count": sum(1 for c in candidates if c.needs_review),
     })
 
 
@@ -275,8 +324,12 @@ def campaign_delete(request, campaign_id: int):
 
 @login_required
 @require_POST
+@ratelimit(key="user", rate=RATE_JD, method="POST", block=False)
 def generate_jd(request, campaign_id: int):
     campaign = _own_campaign(request, campaign_id)
+    if _rate_limited(request, "job description drafting"):
+        return redirect("campaign_detail", campaign_id=campaign.pk)
+
     campaign.role_title = request.POST.get("role_title", campaign.role_title).strip()
     campaign.experience_required = request.POST.get("experience", "").strip()
     campaign.location = request.POST.get("location", "").strip()
@@ -339,9 +392,12 @@ def save_jd(request, campaign_id: int):
 
 @login_required
 @require_POST
+@ratelimit(key="user", rate=RATE_LAUNCH, method="POST", block=False)
 def launch_campaign(request, campaign_id: int):
     """Create the Google Form and Sheet, and optionally post to LinkedIn."""
     campaign = _own_campaign(request, campaign_id)
+    if _rate_limited(request, "campaign launch"):
+        return redirect("campaign_detail", campaign_id=campaign.pk)
 
     if not campaign.jd_text.strip():
         messages.error(request, "Draft a job description before launching.")
@@ -402,8 +458,12 @@ def launch_campaign(request, campaign_id: int):
 
 @login_required
 @require_POST
+@ratelimit(key="user", rate=RATE_SYNC, method="POST", block=False)
 def sync_campaign_view(request, campaign_id: int):
     campaign = _own_campaign(request, campaign_id)
+    if _rate_limited(request, "sync"):
+        return redirect("campaign_detail", campaign_id=campaign.pk)
+
     if not campaign.form_id:
         messages.error(request, "This campaign has no application form yet.")
         return redirect("campaign_detail", campaign_id=campaign.pk)
@@ -423,8 +483,12 @@ def sync_campaign_view(request, campaign_id: int):
 
 @login_required
 @require_POST
+@ratelimit(key="user", rate=RATE_RESCORE, method="POST", block=False)
 def rescore_campaign_view(request, campaign_id: int):
     campaign = _own_campaign(request, campaign_id)
+    if _rate_limited(request, "re-scoring"):
+        return redirect("campaign_detail", campaign_id=campaign.pk)
+
     if not campaign.candidates.exists():
         messages.info(request, "There are no candidates to re-score.")
         return redirect("campaign_detail", campaign_id=campaign.pk)
@@ -471,6 +535,9 @@ def candidate_detail(request, campaign_id: int, candidate_id: int):
         "profile": candidate.get_profile(),
         "github": candidate.get_github(),
         "job_spec": campaign.get_job_spec(),
+        "guide": candidate.get_interview_guide(),
+        "durations": COMMON_DURATIONS,
+        "default_duration": candidate.interview_duration or 45,
     })
 
 
@@ -501,6 +568,62 @@ def rate_candidate(request, campaign_id: int, candidate_id: int):
     candidate.recruiter_note = request.POST.get("note", "").strip()[:2000]
     candidate.save(update_fields=["recruiter_rating", "recruiter_note", "updated_at"])
     messages.success(request, "Rating saved — it will be used to evaluate the scorer.")
+    return redirect("candidate_detail", campaign_id=campaign.pk, candidate_id=candidate.pk)
+
+
+@login_required
+@require_POST
+@ratelimit(key="user", rate=RATE_INTERVIEW, method="POST", block=False)
+def generate_interview_guide(request, campaign_id: int, candidate_id: int):
+    """Build interview questions grounded in this candidate's own background.
+
+    The booked slot length comes from the recruiter because only they know it,
+    and it determines how many questions are worth preparing — a 30-minute
+    screen and a 90-minute panel need very different plans.
+    """
+    campaign = _own_campaign(request, campaign_id)
+    candidate = get_object_or_404(Candidate, pk=candidate_id, campaign=campaign)
+
+    if _rate_limited(request, "interview guide"):
+        return redirect("candidate_detail", campaign_id=campaign.pk, candidate_id=candidate.pk)
+
+    try:
+        duration = int(request.POST.get("duration_minutes", 45))
+    except (TypeError, ValueError):
+        duration = 45
+    # Clamp rather than reject: a typo should not lose the request, and nobody
+    # runs a 4-minute or 6-hour interview.
+    duration = max(10, min(180, duration))
+
+    pipeline = ScreeningPipeline(get_config())
+    try:
+        guide = pipeline.interview_guide(
+            candidate.get_profile(),
+            campaign.get_job_spec(),
+            duration_minutes=duration,
+            github=candidate.get_github(),
+            score=candidate.get_score(),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.exception("Interview guide generation failed for candidate %s", candidate.pk)
+        messages.error(request, f"Could not prepare the interview guide: {exc}")
+        return redirect("candidate_detail", campaign_id=campaign.pk, candidate_id=candidate.pk)
+
+    if not guide.ok:
+        messages.error(request, guide.error or "No usable questions were produced.")
+        return redirect("candidate_detail", campaign_id=campaign.pk, candidate_id=candidate.pk)
+
+    candidate.interview_guide = guide.to_dict()
+    candidate.interview_duration = duration
+    candidate.save(update_fields=["interview_guide", "interview_duration", "updated_at"])
+
+    messages.success(
+        request,
+        f"Prepared {len(guide.questions)} question(s) for a {duration}-minute interview.",
+    )
+    for warning in guide.warnings:
+        messages.warning(request, warning)
+
     return redirect("candidate_detail", campaign_id=campaign.pk, candidate_id=candidate.pk)
 
 
