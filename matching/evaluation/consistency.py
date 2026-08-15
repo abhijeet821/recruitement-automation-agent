@@ -75,10 +75,6 @@ class ConsistencyReport:
     notes: list[str] = field(default_factory=list)
 
     @property
-    def worst_stdev(self) -> float:
-        return max((d.stdev for d in self.dimensions), default=0.0)
-
-    @property
     def verdict(self) -> str:
         if self.overall.stdev < 0.05:
             return "stable — effectively deterministic"

@@ -27,12 +27,6 @@ class Scorer(abc.ABC):
     ) -> CandidateScore:
         ...
 
-    def score_many(
-        self,
-        items: list[tuple[ResumeProfile, JobSpec, GitHubProfile | None]],
-    ) -> list[CandidateScore]:
-        return [self.score(r, j, g) for r, j, g in items]
-
 
 def band(overall: float) -> str:
     """Map a 0-100 score onto a recommendation band.

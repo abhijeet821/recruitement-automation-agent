@@ -63,8 +63,3 @@ def decrypt(ciphertext: str) -> str:
             "SECRET_KEY or FIELD_ENCRYPTION_KEY changed since they were saved; "
             "the affected user must reconnect their Google account."
         ) from exc
-
-
-def generate_key() -> str:
-    """Generate a fresh key for FIELD_ENCRYPTION_KEY."""
-    return Fernet.generate_key().decode()
